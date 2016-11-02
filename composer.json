@@ -21,14 +21,6 @@
         "addons/entrust": "dev-master",
         "addons/func": "dev-master"
     },
-    "scripts": {
-        "post-install-cmd": [
-            "php -r \"unlink('.git');\""
-        ],
-        "post-update-cmd": [
-            "php -r \"unlink('.git');\""
-        ]
-    },
     "autoload": {
         "psr-4": {
             "Addons\\Core\\": "src/"
