@@ -1,0 +1,42 @@
+{
+    "name": "addons/core",
+    "description": "Laravel's Addons.",
+    "homepage": "https://www.load-page.com",
+    "keywords": ["L5", "Laravel 5", "Laravel","Addons"],
+    "license": "MIT",
+    "support": {
+        "issues": "https://git.load-page.com/addons/core/issues",
+        "source": "https://git.load-page.com/addons/core"
+    },
+    "authors": [
+        {
+            "name": "Fly",
+            "email": "fly@load-page.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.10",
+        "illuminate/database": "~5.0",
+        "addons/smarty": "1.*"
+        "addons/entrust": "1.*"
+        "addons/function": "1.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Addons\\Core\\": "src/"
+        },
+        "classmap": [
+            "/src"
+        ],
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    },
+    "minimum-stability": "dev"
+    
+}
