@@ -17,9 +17,9 @@
     "require": {
         "php": ">=5.6.10",
         "illuminate/database": "~5.0",
-        "addons/smarty": "1.*",
-        "addons/entrust": "1.*",
-        "addons/func": "1.*"
+        "addons/smarty": "dev-master",
+        "addons/entrust": "dev-master",
+        "addons/func": "dev-master"
     },
     "autoload": {
         "psr-4": {
