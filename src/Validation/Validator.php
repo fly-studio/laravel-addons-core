@@ -2,7 +2,6 @@
 namespace Addons\Core\Validation;
  
 use Illuminate\Validation\Validator as BaseValidator;
-use Addons\Core\Models\Field;
 /**
  * 本Class主要是处理宽字符的长度、Fields检索等
  * 
@@ -40,16 +39,6 @@ class Validator extends BaseValidator {
 		if (!is_numeric($value)) return true;
 		$value += 0;
 		return !empty($value);
-	}
-
-	protected function validateField($attribute, $value, $parameters)
-	{
-		return (new Field())->exists($value, empty($parameters) ? $attribute : $parameters[0]);
-	}
-
-	protected function validateFieldName($attribute, $value, $parameters)
-	{
-		return (new Field())->exists_name($value, empty($parameters) ? $attribute : $parameters[0]);
 	}
 
 	protected function validateIdCard($attribute, $value, $parameters)
@@ -243,13 +232,6 @@ class Validator extends BaseValidator {
 					case 'numeric':
 						$rule = 'number';
 						break;
-					case 'field':
-						$rule = 'digits';
-						break;
-					case 'fieldname':
-						$rule = 'regex';
-						$parameters = '/^[\pL\pM\pN_-]+$/u';
-						break;
 					//case 'date':
 					//	$rule = 'regex';
 					//	$parameters = '(1[1-9]\d{2}|20\d{2}|2100)-([0-1]?[1-9]|1[0-2])-([0-2]?[1-9]|3[0-1]|[1-2]0)(\s([0-1]?\d|2[0-3]):([0-5]?\d)(:([0-5]?\d))?)?';
@@ -267,9 +249,19 @@ class Validator extends BaseValidator {
 					case 'timezone':
 					case 'unique':
 						continue 2;
-					default: //email url regex required ansi phone idcard notzero
-						
+					case 'email':
+					case 'url':
+					case 'regex':
+					case 'required':
+					case 'ansi':
+					case 'phone':
+					case 'idcard':
+					case 'notzero':
+					case 'timestamp':
+					case 'timetick':
 						break;
+					default:
+						continue 2;
 				}
 				$jqueryRules[$attribute] +=  [$rule => $parameters];
 			}

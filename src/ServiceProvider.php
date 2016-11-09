@@ -2,9 +2,8 @@
 namespace Addons\Core;
 
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-//use Illuminate\Translation\Translator;
-//use Illuminate\Contracts\Validation\Validator;
-//use Translator,Validator;
+use Addons\Core\validation\Validator;
+
 use Addons\Core\Http\ResponseFactory;
 use Addons\Core\Http\UrlGenerator;
 use Symfony\Component\Finder\Finder;
@@ -112,7 +111,7 @@ class ServiceProvider extends BaseServiceProvider
 		]);
 
 		$this->app['validator']->resolver( function( $translator, $data, $rules, $messages = [], $customAttributes = []) {
-			return new Validation\Validator( $translator, $data, $rules, $messages, $customAttributes );
+			return new Validator( $translator, $data, $rules, $messages, $customAttributes );
 		});
 
 		$this->bootPlugins();

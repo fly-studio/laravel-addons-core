@@ -6,6 +6,5 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class Core {
-	//use Macroable;
 
 }

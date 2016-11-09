@@ -17,7 +17,7 @@ class Controller extends BaseController {
 		{
 			$this->initCommon();
 			$this->initMember();
-			foreach(['site', 'fields', 'user'] as $key)
+			foreach(['site', 'user'] as $key)
 				$this->viewData['_'.$key] = &$this->$key;
 			if( !$this->checkPermission($this->user, $method) )
 			{

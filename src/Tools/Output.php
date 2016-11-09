@@ -32,6 +32,7 @@ class Output {
 		$sheet->fromArray($data);
 
 		$filepath == TRUE && $filepath = tempnam(storage_path('utils'),'excel');
+		@chmod($filepath, 0777);
 		switch (strtolower($ext)) {
 			case 'xlsx':
 				$objWriter = new \PHPExcel_Writer_Excel2007($excel);
@@ -50,7 +51,6 @@ class Output {
 				break;
 		}		
 		$objWriter->save($filepath);
-		@chmod($filepath, 0777);
 		//@unlink($filepath);
 		return $filepath;
 	}
@@ -94,8 +94,8 @@ class Output {
 	public static function yaml($data)
 	{
 		$filepath = tempnam(storage_path('utils'), 'yaml');
-		file_put_contents($filepath, function_exists('yaml_emit') ? yaml_emit($data) : Spyc::YAMLDump($data));
 		@chmod($filepath, 0777);
+		file_put_contents($filepath, function_exists('yaml_emit') ? yaml_emit($data) : Spyc::YAMLDump($data));
 		return $filepath;
 	}
 

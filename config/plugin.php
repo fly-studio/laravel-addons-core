@@ -4,7 +4,7 @@
 //插件的namespace假设为Plugins\Tools
 
 return [
-	'enable' => TRUE, //开关，已停止的插件，建议设置FALSE，以避免浪费资源
+	'enable' => FALSE, //开关，已停止的插件，建议设置FALSE，以避免浪费资源
 	//插件名(英文、数字、-、_)，全局唯一，符合PHP变量名规范，为空代表使用当前文件夹名，
 	'name' => NULL, 
 	'display_name' => '', //本插件的名称，比如：工具箱

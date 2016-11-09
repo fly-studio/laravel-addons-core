@@ -144,8 +144,7 @@ trait AdminTrait {
 		$paginate = $this->_getPaginate($request, $builder, $columns);
 
 		if (!empty($callback) && is_callable($callback))
-			foreach ($paginate as $key => $value)
-				call_user_func_array($callback, [&$value, $key]);
+			call_user_func_array($callback, [$paginate]); //reference Objecy
 
 		return $paginate->toArray() + ['filters' => $paginate->filters, 'orders' => $paginate->orders];
 	}
@@ -176,8 +175,7 @@ trait AdminTrait {
 		$this->_doFilter($request, $builder, $tables_columns);
 		$paginate = $builder->orderBy($builder->getModel()->getKeyName(),'DESC')->paginate($pagesize, $columns);
 		if (!empty($callback) && is_callable($callback))
-			foreach ($paginate as $key => $value)
-				call_user_func_array($callback, [&$value, $key]);
+			call_user_func_array($callback, [&$paginate]);
 		$data = $paginate->toArray();
 		!empty($data['data']) && is_assoc($data['data'][0]) && array_unshift($data['data'], array_keys($data['data'][0]));
 		array_unshift($data['data'], [$builder->getModel()->getTable(), $data['from']. '-'. $data['to'].'/'. $data['total'], date('Y-m-d h:i:s')]);

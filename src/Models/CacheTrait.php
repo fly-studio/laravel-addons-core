@@ -1,6 +1,5 @@
 <?php
 namespace Addons\Core\Models;
-use Illuminate\Support\Str;
 use Cache;
 trait CacheTrait{
 
@@ -13,17 +12,23 @@ trait CacheTrait{
 
 	protected static function bootCacheTrait()
 	{
+		/*		
 		static::created(function($model) {
 			$model->deleteFireCache();
 		});
 		static::updated(function($model) {
 			$model->deleteFireCache();
 		});
+		*/
 		static::deleted(function($model) {
 			$model->deleteFireCache();
 		});
 		static::saved(function($model) {
 			$model->deleteFireCache();
+		});
+		if (method_exists(static::class, 'restored'))
+			static::restored(function($model){
+				$model->deleteFireCache();
 		});
 	}
 
@@ -43,7 +48,7 @@ trait CacheTrait{
 		$keyName = $model->getKeyName();
 		$min = floor($id / 1000); $max = $min + 1;
 		$key = $model->getTable().','.$min.'-'.$max;
-		$data = Cache::remember($key, 7 * 24 * 60, function() use($min, $max, $keyName){ // 7 days
+		$data = Cache::remember($key, config('cache.ttl'), function() use($min, $max, $keyName){ // 7 days
 			$models = static::where($keyName, '>=', $min * 1000)->where($keyName, '<', $max * 1000)->get();
 			return $models->keyBy($keyName);
 		});

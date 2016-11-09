@@ -1,5 +1,4 @@
 <?php
-
 namespace Addons\Core\Validation;
 
 use Closure;

@@ -4,9 +4,11 @@ namespace Addons\Core\Models;
 use Illuminate\Database\Eloquent\Model as BaseModel;
 
 use Addons\Core\Models\CacheTrait;
+use Addons\Core\Models\CallTrait;
+
 class Model extends BaseModel {
-	use CacheTrait;
-	
+	use CacheTrait, CallTrait;
+
 	public function insertUpdate(array $attributes)
 	{
 		$this->fill($attributes);

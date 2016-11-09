@@ -154,10 +154,11 @@ class Tree extends Model {
 	 * @param mixed $items 通过getData获得的二维数组(with_id)
 	 * @param integer $topid 提供此二维数组中的顶级节点topid
 	 */
-	protected function _data_to_tree($items, $topid = 0, $with_id = TRUE)
-	{
+	public function _data_to_tree($items, $topid = 0, $with_id = TRUE)
+	{ 
 		foreach ($items as $item)
 		{
+			if ($item[$this->getKeyName()] == $item[$this->getParentKeyName()]) continue; //如果父ID等于自己，避免死循环，跳过
 			if ($with_id)
 				$items[ ($item[$this->getParentKeyName()]) ][ 'children' ][ ($item[$this->getKeyName()]) ] = &$items[ ($item[$this->getKeyName()]) ];
 			else
