@@ -7,7 +7,6 @@ use Addons\Core\Models\TreeTrait;
 class Tree extends Model {
 	use TreeTrait;
 	//不能批量赋值
-	public $auto_cache = false;
 	public $fire_caches = [];
 
 
@@ -128,12 +127,12 @@ class Tree extends Model {
 			return $builder->get($columns);
 		} else {
 			$result = $this->newCollection();
-			
 			$children = $this->getChildren($columns);
-			array_walk($children, function($v) use ($result, $columns){
+			foreach($children as $v)
+			{
 				$result[] = $v;
-				$result->merge($this->getDescendant($columns));
-			});
+				$result = $result->merge($v->getDescendant($columns));
+			}
 			return $result;
 		}
 	}

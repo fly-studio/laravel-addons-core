@@ -93,7 +93,7 @@ trait ValidatesRequests
 		$validator = $this->validate($request, $table, $keys, $model);
 		if ($validator->fails()) {
 			$request->flashExcept('password');
-			throw new HttpResponseException($this->failure_validate($validator->errors()));
+			return $this->failure_validate($validator->errors());
 		}
 		return $this->filterValidatorData($validator, $keys);
 	}
