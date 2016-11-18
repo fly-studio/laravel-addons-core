@@ -1,3 +1,6 @@
+<{block "head-scripts-laravel"}>
+	<script>var Laravel = { csrfToken: '<{csrf_token()}>' };</script>
+<{/block}>
 <{block "head-scripts-debug"}>
 	<script src="<{'js/debug/eruda.debug.js'|static}>"></script>
 <{/block}>

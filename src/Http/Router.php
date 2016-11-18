@@ -23,11 +23,16 @@ class Router extends BaseRouter {
 			$this->resource($route_name, $controller_name);
 
 			//admin/ctrl/data,print,export/json
-			$this->any($route_name.'/{action}/{of}/{jsonp?}', function($action, $of, $jsonp = NULL) use($route_name){
+			$this->match(['post', 'get'], $route_name.'/{action}/{of}/{jsonp?}', function($action, $of, $jsonp = NULL) use($route_name){
 				app('request')->offsetSet('of', $of);
 				app('request')->offsetSet('jsonp', $jsonp);
 				return $this->callbackUndefinedRoute($route_name, $action);
 			})->where('action', '(data|print|export)');
+
+			$this->match(['post', 'put', 'patch', 'delete'], $route_name.'/{id}/{action}', function($id, $action) use($route_name) {
+				app('request')->offsetSet('id', $id);
+				return $this->callbackUndefinedRoute($route_name, $action);
+			});
 		}
 			
 	}
