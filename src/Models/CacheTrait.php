@@ -8,7 +8,7 @@ trait CacheTrait{
 	 * 
 	 * @var array
 	 */
-	protected $fire_caches = [];
+	//protected $fire_caches = [];
 
 	protected static function bootCacheTrait()
 	{
@@ -34,8 +34,9 @@ trait CacheTrait{
 
 	protected function deleteFireCache()
 	{
-		foreach($this->fire_caches as $key)
-			Cache::forget($key);
+		if (isset($this->fire_caches))
+			foreach($this->fire_caches as $key)
+				Cache::forget($key);
 
 		$min = floor($this->getKey() / 1000); $max = $min + 1;
 		$key = $this->getTable().','.$min.'-'.$max;

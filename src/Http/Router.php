@@ -77,7 +77,7 @@ class Router extends BaseRouter {
 		{
 			$ctrls = explode('/', $ctrl);
 			$ctrls = array_map(function($v){
-				return Str::studly($v);
+				return Str::camel($v);
 			}, $ctrls);
 			$namespace = $route->getAction()['namespace'];
 			$className = $namespace.'\\'.implode('\\', $ctrls).'Controller';
@@ -86,7 +86,7 @@ class Router extends BaseRouter {
 			$className = $namespace.'\\'.$ctrl;
 		
 		//!class_exists($className) && $className = 'Addons\\Core\\Controllers\\'.implode('\\', $ctrls).'Controller';
-		$action = Str::studly($action);
+		$action = Str::camel($action);
 		(!class_exists($className) ||  !method_exists($className, $action)) && abort(404);
 
 		$class = new \ReflectionClass($className);

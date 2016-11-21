@@ -1,14 +1,16 @@
 <?php
 namespace Addons\Core\Models;
 
-use Addons\Core\Models\Model;
+use Illuminate\Database\Eloquent\Model;
 use Addons\Core\Models\TreeTrait;
+use Addons\Core\Models\CacheTrait;
+use Addons\Core\Models\CallTrait;
+use Addons\Core\Models\PolyfillTrait;
 
 class Tree extends Model {
+	use CacheTrait, CallTrait, PolyfillTrait;
 	use TreeTrait;
 	//不能批量赋值
-	public $fire_caches = [];
-
 
 	protected $guarded = ['id', 'level', 'path', 'order']; //这些字段禁止维护
 

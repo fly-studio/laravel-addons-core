@@ -1,14 +1,8 @@
 <?php
 namespace Addons\Core\Models;
 
-use Illuminate\Database\Eloquent\Model as BaseModel;
-
-use Addons\Core\Models\CacheTrait;
-use Addons\Core\Models\CallTrait;
-
-class Model extends BaseModel {
-	use CacheTrait, CallTrait;
-
+use Illuminate\Support\Str;
+trait PolyfillTrait{
 	public function insertUpdate(array $attributes)
 	{
 		$this->fill($attributes);
@@ -48,4 +42,24 @@ class Model extends BaseModel {
 
 		return $this;
 	}
+
+	/**
+     * Cast an attribute to a native PHP type.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return mixed
+     */
+    protected function castAttribute($key, $value)
+    {
+    	$type = $this->getCastType($key);
+    	if (!empty($type))
+    	{
+    		$method = 'as'.Str::studly($type);
+    		if (method_exists($this, $method))
+    			return call_user_func([$this, $method], $value);
+    	}
+    	return parent::castAttribute($key, $value);
+    }
+
 }

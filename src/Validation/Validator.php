@@ -121,8 +121,11 @@ class Validator extends BaseValidator {
 
 	private function isNumeric($rule_list)
 	{
-		foreach ($rule_list as $rule => $value) 
-			return in_array(strtolower($rule), ['digits', 'digitsbetween', 'numeric', 'integer']);
+		foreach ($rule_list as $rule => $value)
+		{
+			if (in_array(strtolower($rule), ['digits', 'digitsbetween', 'numeric', 'integer']))
+				return true;
+		}
 		return false;
 	}
 

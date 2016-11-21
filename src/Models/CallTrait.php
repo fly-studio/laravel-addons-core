@@ -1,5 +1,6 @@
 <?php
 namespace Addons\Core\Models;
+
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 

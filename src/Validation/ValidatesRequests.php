@@ -18,7 +18,7 @@ trait ValidatesRequests
 	 * @var string
 	 */
 	
-	private function getValidationData($table, $keys, Model $model = NULL)
+	private function getValidationData($table, $keys, Model $model = null, $replaceToTagName = false)
 	{
 		$config = app('config')->get('validation.'.$table);
 		$keys == '*' && $keys = array_keys($config);
@@ -30,11 +30,14 @@ trait ValidatesRequests
 			!is_array($v['rules']) && $v['rules'] = explode('|', $v['rules']);
 			foreach ($v['rules'] as &$vv)
 			{
+				//替换rule中的{{  }}
 				$vv = str_replace(',{{attribute}}', ','.$k, $vv);
 				$vv = preg_replace_callback('/,\{\{([a-z0-9_\-]*)\}\}/i', function( $matches ) use ($model){
 					return !empty($model) ? ($model->offsetExists($matches[1]) ?  ','.$model->getAttribute($matches[1]) : '') : '';
 				}, $vv);
 			}
+
+			isset($v['tag_name']) && $replaceToTagName && $k = $v['tag_name'];
 			isset($v['rules']) && $rules[$k] = $v['rules'];
 			isset($v['message']) && $messages[$k] = $v['message'];
 			isset($v['name']) && $attributes[$k] = $v['name'];
@@ -49,16 +52,16 @@ trait ValidatesRequests
 	 * @param  string  $keys    [description]
 	 * @return [type]           [description]
 	 */
-	public function validate(Request $request, $table, $keys = '*', Model $model = NULL)
+	public function validate(Request $request, $table, $keys = '*', Model $model = null)
 	{
 		$validateData = $this->getValidationData($table, $keys, $model);
-		$validator = $this->getValidationFactory()->make($request->all(), $validateData['rules'], array_keyflatten($validateData['messages'],'.'), $validateData['attributes']);
+		$validator = $this->getValidationFactory()->make($request->all(), $validateData['rules'], array_keyflatten($validateData['messages'], '.'), $validateData['attributes']);
 		return $validator;
 	}
 
-	public function getScriptValidate($table, $keys = '*', Model $model = NULL)
+	public function getScriptValidate($table, $keys = '*', Model $model = null)
 	{
-		$validateData = $this->getValidationData($table, $keys, $model);
+		$validateData = $this->getValidationData($table, $keys, $model, true);
 		$validator = $this->getValidationFactory()->make([], $validateData['rules'], $validateData['messages'], $validateData['attributes']);
 		$rules = $validator->getjQueryRules();
 
@@ -71,7 +74,7 @@ trait ValidatesRequests
 	 * @param  string  $keys    [description]
 	 * @return [type]           [description]
 	 */
-	public function autoValidate(Request $request, $table, $keys = '*', Model $model = NULL)
+	public function autoValidate(Request $request, $table, $keys = '*', Model $model = null)
 	{
 		if ($request->ajax()) return $this->tipsValidate($request, $table, $keys, $model);
 
@@ -88,7 +91,7 @@ trait ValidatesRequests
 	 * @param  string  $keys    [description]
 	 * @return [type]           [description]
 	 */
-	public function tipsValidate(Request $request, $table, $keys = '*', Model $model = NULL)
+	public function tipsValidate(Request $request, $table, $keys = '*', Model $model = null)
 	{
 		$validator = $this->validate($request, $table, $keys, $model);
 		if ($validator->fails()) {
