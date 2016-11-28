@@ -84,7 +84,7 @@ class ServiceProvider extends BaseServiceProvider
 			!empty($config['commands']) && $consoleKernel->commands = array($consoleKernel->commands, $config['commands']);
 
 			//这里提供更加灵活的plugins/ServiceProvider.php的配置方式，注意$config['register']中配置所对应的程序会优先于plugins/ServiceProvider.php
-			$provider = $namespace.'\\ServiceProvider';
+			$provider = $namespace.'\ServiceProvider';
 			file_exists($path.'ServiceProvider.php') && $this->app->register(new $provider($this->app));
 		}
 	}
@@ -135,7 +135,7 @@ class ServiceProvider extends BaseServiceProvider
 				$this->loadMigrationsFrom(realpath($config['path'].'database/migrations'));
 			foreach($config['routers'] as $key => $route)
 			{
-				$router->group(['namespace' => empty($route['namespace']) ? $config['namespace'].'\\App\\Http\\Controllers' : $route['namespace'], 'middleware' => array_merge([$key], $route['middleware']), 'prefix' => $route['prefix']], function($router) use ($config, $key) {
+				$router->group(['namespace' => empty($route['namespace']) ? $config['namespace'].'\App\Http\Controllers' : $route['namespace'], 'middleware' => array_merge([$key], $route['middleware']), 'prefix' => $route['prefix']], function($router) use ($config, $key) {
 					require $config['path'].'routes/'.$key.'.php';
 				});
 			}

@@ -188,14 +188,16 @@ class Validator extends BaseValidator {
 						$rule = $this->isNumeric($_list) ? 'range' : 'rangelength';
 						$parameters = [floatval($parameters), floatval($parameters)];
 						break;
-					case 'requiredwithoutall': //任意一个有值
+					/*case 'requiredwithoutall': //任意一个有值
 						$rule = 'require_from_group';
+						!is_array($parameters) && $parameters = [$parameters];
 						$attribute =  [1, implode(',', array_map(function($v) {return '[name="'.$v.'"]';}, $parameters))];
 						break;
 					case 'requiredwithout': //任意一个有值
 						$rule = 'require_from_group';
-						$attribute =  [count($parameters) > 1 ? count($parameters) - 1 : 1, implode(',', array_map(function($v) {return '[name="'.$v.'"]';}, $parameters))];
-						break;
+						!is_array($parameters) && $parameters = [$parameters];
+						$parameters =  [count($parameters) > 1 ? count($parameters) - 1 : 1, implode(',', array_map(function($v) {return '[name="'.$v.'"]';}, $parameters))];
+						break;*/
 					case 'max':
 						$rule = $this->isNumeric($_list) ? 'max' : 'maxlength';
 						$parameters = floatval($parameters);
@@ -251,6 +253,8 @@ class Validator extends BaseValidator {
 					case 'string':
 					case 'timezone':
 					case 'unique':
+					case 'requiredwithout':
+					case 'requiredwithoutall':
 						continue 2;
 					case 'email':
 					case 'url':

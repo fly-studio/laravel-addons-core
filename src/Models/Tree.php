@@ -22,14 +22,14 @@ class Tree extends Model {
 	//relation
 	public function children()
 	{
-		$builder = $this->hasMany(get_class($this), $this->getParentKeyName(), $this->getKeyName());
+		$builder = $this->hasMany(get_class($this), $this->parentKey, $this->getKeyName());
 		!empty($this->orderKey) && $builder->orderBy($this->orderKey, 'ASC');
 		return $builder;
 	}
 
 	public function parent()
 	{
-		return $this->hasOne(get_class($this), $this->getKeyName(), $this->getParentKeyName());
+		return $this->hasOne(get_class($this), $this->getKeyName(), $this->parentKey);
 	}
 
 	/**
@@ -108,7 +108,7 @@ class Tree extends Model {
 	{
 		$columns = $this->formatColumns($columns);
 		$builder = static::where($this->parentKey, $this->getKey());
-		!empty($this->getOrderKeyName()) && $builder->orderBy($this->getOrderKeyName());
+		!empty($this->orderKey) && $builder->orderBy($this->orderKey);
 		return $builder->get();
 	}
 
@@ -121,11 +121,11 @@ class Tree extends Model {
 	{
 		$columns = $this->formatColumns($columns);
 		$node = $this;
-		if (!empty($this->getPathKeyName())) //使用Path搜索出来的节点，无法通过order进行良好的排序
+		if (!empty($this->pathKey)) //使用Path搜索出来的节点，无法通过order进行良好的排序
 		{
-			$builder = static::where($this->getPathKeyName(), 'LIKE', $node->getPathKey().'%')->where($node->getKeyName(), '!=', $node->getKey());
-			!empty($this->getOrderKeyName()) && $builder->orderBy($this->getOrderKeyName());
-			!empty($this->getPathKeyName()) && $builder->orderBy($this->getPathKeyName());
+			$builder = static::where($this->pathKey, 'LIKE', $node->getPathKey().'%')->where($node->getKeyName(), '!=', $node->getKey());
+			!empty($this->orderKey) && $builder->orderBy($this->orderKey);
+			!empty($this->pathKey) && $builder->orderBy($this->pathKey);
 			return $builder->get($columns);
 		} else {
 			$result = $this->newCollection();
@@ -159,11 +159,11 @@ class Tree extends Model {
 	{ 
 		foreach ($items as $item)
 		{
-			if ($item[$this->getKeyName()] == $item[$this->getParentKeyName()]) continue; //如果父ID等于自己，避免死循环，跳过
+			if ($item[$this->getKeyName()] == $item[$this->parentKey]) continue; //如果父ID等于自己，避免死循环，跳过
 			if ($with_id)
-				$items[ ($item[$this->getParentKeyName()]) ][ 'children' ][ ($item[$this->getKeyName()]) ] = &$items[ ($item[$this->getKeyName()]) ];
+				$items[ ($item[$this->parentKey]) ][ 'children' ][ ($item[$this->getKeyName()]) ] = &$items[ ($item[$this->getKeyName()]) ];
 			else
-				$items[ ($item[$this->getParentKeyName()]) ][ 'children' ][] = &$items[ ($item[$this->getKeyName()]) ];
+				$items[ ($item[$this->parentKey]) ][ 'children' ][] = &$items[ ($item[$this->getKeyName()]) ];
 		}
 	 	return isset($items[ $topid ][ 'children' ]) ? $items[ $topid ][ 'children' ] : [];
 	}
@@ -172,8 +172,8 @@ class Tree extends Model {
 	{
 		if (in_array('*', $columns)) return $columns;
 		!in_array($this->getKeyName(), $columns) && $columns[] = $this->getKeyName();
-		!in_array($this->getParentKeyName(), $columns) && $columns[] = $this->getParentKeyName();
-		!in_array($this->getPathKeyName(), $columns) && $columns[] = $this->getPathKeyName();
+		!in_array($this->parentKey, $columns) && $columns[] = $this->parentKey;
+		!in_array($this->pathKey, $columns) && $columns[] = $this->pathKey;
 
 		return $columns;
 	}
@@ -181,17 +181,17 @@ class Tree extends Model {
 
 	public function newOrder()
 	{
-		if (empty($this->getOrderKeyName())) return null;
+		if (empty($this->orderKey)) return null;
 
-		$node = static::where($this->getParentKeyName(), $this->getParentKey())->where($this->getKeyName(), '!=', $this->getKey() ?: 0)->orderBy($this->getOrderKeyName(), 'DESC')->first([$this->getOrderKeyName()]);
+		$node = static::where($this->parentKey, $this->getParentKey())->where($this->getKeyName(), '!=', $this->getKey() ?: 0)->orderBy($this->orderKey, 'DESC')->first([$this->orderKey]);
 		return empty($node) ? 1 : intval($node->getOrderKey()) + 1;
 	}
 
 	public function moveToLast()
 	{
-		if (empty($this->getOrderKeyName())) return null;
+		if (empty($this->orderKey)) return null;
 
-		return static::where($this->getKeyName(), $this->getKey())->update([$this->getOrderKeyName() => $this->newOrder()]);
+		return static::where($this->getKeyName(), $this->getKey())->update([$this->orderKey => $this->newOrder()]);
 	}
 
 	public function movePrev($target_id)
@@ -221,16 +221,16 @@ class Tree extends Model {
 		if (empty($target_id) || empty($targetNode)) return NULL;
 
 		if ($move_type == 'inner') //成为别人子集，则直接调用,放入子集
-			return $this->update([$this->getParentKeyName() => $target_id]); //自动调取changeParent
+			return $this->update([$this->parentKey => $target_id]); //自动调取changeParent
 		
 		if ($targetNode->getParentKey() != $this->getParentKey()) //父级不相同
-			$this->update([$this->getParentKeyName() => $targetNode->getParentKey()]); //自动调取changeParent
-		if (!empty($this->getOrderKeyName()))
+			$this->update([$this->parentKey => $targetNode->getParentKey()]); //自动调取changeParent
+		if (!empty($this->orderKey))
 		{
 			$order = intval($targetNode->getOrderKey()) + ($move_type == 'prev' ? 0 : 1);
 			//更新同父级下所有的顺序
-			static::where($this->getParentKeyName(), $targetNode->getParentKey())->where($this->getOrderKeyName(), '>=', $order)->increment($this->getOrderKeyName());
-			$this->update([$this->getOrderKeyName() => $order]); //更新自己的顺序
+			static::where($this->parentKey, $targetNode->getParentKey())->where($this->orderKey, '>=', $order)->increment($this->orderKey);
+			$this->update([$this->orderKey => $order]); //更新自己的顺序
 		}
 
 		return $this;

@@ -23,15 +23,15 @@ class Router extends BaseRouter {
 			$this->resource($route_name, $controller_name);
 
 			//admin/ctrl/data,print,export/json
-			$this->match(['post', 'get'], $route_name.'/{action}/{of}/{jsonp?}', function($action, $of, $jsonp = NULL) use($route_name){
+			$this->match(['post', 'get'], $route_name.'/{action}/{of}/{jsonp?}', function($action, $of, $jsonp = NULL) use($controller_name){
 				app('request')->offsetSet('of', $of);
 				app('request')->offsetSet('jsonp', $jsonp);
-				return $this->callbackUndefinedRoute($route_name, $action);
+				return $this->callbackUndefinedRoute($controller_name, $action, true);
 			})->where('action', '(data|print|export)');
 
-			$this->match(['post', 'put', 'patch', 'delete'], $route_name.'/{id}/{action}', function($id, $action) use($route_name) {
+			$this->match(['post', 'put', 'patch', 'delete'], $route_name.'/{id}/{action}', function($id, $action) use($controller_name) {
 				app('request')->offsetSet('id', $id);
-				return $this->callbackUndefinedRoute($route_name, $action);
+				return $this->callbackUndefinedRoute($controller_name, $action, true);
 			});
 		}
 			
@@ -73,13 +73,13 @@ class Router extends BaseRouter {
 	{
 		//能执行到本过程，表示路由已经匹配到，则可以直接获取当前匹配的路由的配置
 		$route = $this->getCurrentRoute();
+		$namespace = $route->getAction()['namespace'];
 		if (!$ctrl_is_class)
 		{
 			$ctrls = explode('/', $ctrl);
 			$ctrls = array_map(function($v){
 				return Str::camel($v);
 			}, $ctrls);
-			$namespace = $route->getAction()['namespace'];
 			$className = $namespace.'\\'.implode('\\', $ctrls).'Controller';
 		}
 		else 
