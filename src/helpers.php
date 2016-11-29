@@ -16,7 +16,7 @@ function static_path($path = '')
 {
 	static $static;
 	if (empty($static)) $static = base_path(config('app.static'));
-	return $static . (!empty($path) ? DIRECTORY_SEPARATOR.$path : $path);
+	return normalize_path($static . (!empty($path) ? DIRECTORY_SEPARATOR.$path : ''));
 }
 }
 if (! function_exists('plugins_path')) {
@@ -30,7 +30,7 @@ function static_url($url = '')
 {
 	static $static;
 	if (empty($static)) $static = trim(str_replace(array(base_path(), '\\'), array('', '/'), base_path(config('app.static'))), '/') ;
-	return url($static . (!empty($url) ? '/'.$url : $url));
+	return url($static . (!empty($url) ? '/'.$url : ''));
 }
 }
 if (! function_exists('plugins_url')) {

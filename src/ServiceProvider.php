@@ -2,7 +2,7 @@
 namespace Addons\Core;
 
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use Addons\Core\validation\Validator;
+use Addons\Core\Validation\Validator;
 
 use Addons\Core\Http\ResponseFactory;
 use Addons\Core\Http\UrlGenerator;

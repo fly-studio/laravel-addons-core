@@ -78,7 +78,7 @@ class Router extends BaseRouter {
 		{
 			$ctrls = explode('/', $ctrl);
 			$ctrls = array_map(function($v){
-				return Str::camel($v);
+				return ucfirst(Str::camel($v));
 			}, $ctrls);
 			$className = $namespace.'\\'.implode('\\', $ctrls).'Controller';
 		}
