@@ -5,19 +5,9 @@ use Addons\Core\Spyc;
 
 class Output {
 
-	public static function json($data)
-	{
-		return json_encode($data);
-	}
-
-	public static function jsonp($data, $callback = 'callback')
-	{
-		return htmlspecialchars($callback).'.call(this,'.self::json($data).');';
-	}
-
 	public static function js($data)
 	{
-		return 'var RESULT = '.self::json($data).';if (self != parent) parent.RESULT = self.RESULT;';
+		return 'var RESULT = '.json_encode($data).';if (self != parent) parent.RESULT = self.RESULT;';
 	}
 
 	public static function excel($data, $ext = 'xlsx', $filepath = TRUE)

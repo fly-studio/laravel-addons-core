@@ -9,9 +9,7 @@ use Illuminate\Http\Exception\HttpResponseException;
 use Illuminate\Foundation\Validation\ValidatesRequests as BaseValidatesRequests;
 trait ValidatesRequests
 {
-	use BaseValidatesRequests {
-		validate as scrapValidate;
-	}
+	use BaseValidatesRequests;
 	/**
 	 * The default error bag.
 	 *
@@ -52,7 +50,7 @@ trait ValidatesRequests
 	 * @param  string  $keys    [description]
 	 * @return [type]           [description]
 	 */
-	public function validate(Request $request, $table, $keys = '*', Model $model = null)
+	protected function validating(Request $request, $table, $keys = '*', Model $model = null)
 	{
 		$validateData = $this->getValidationData($table, $keys, $model);
 		$validator = $this->getValidationFactory()->make($request->all(), $validateData['rules'], array_keyflatten($validateData['messages'], '.'), $validateData['attributes']);
@@ -76,29 +74,25 @@ trait ValidatesRequests
 	 */
 	public function autoValidate(Request $request, $table, $keys = '*', Model $model = null)
 	{
-		if ($request->ajax()) return $this->tipsValidate($request, $table, $keys, $model);
+		if ($request->ajax() || $request->offsetExists('of')) return $this->validateWithApi($request, $table, $keys, $model);
 
-		$validator = $this->validate($request, $table, $keys);
+		$validator = $this->validating($request, $table, $keys);
 		if ($validator->fails())
 			$this->throwValidationException($request, $validator);
 
 		return $this->filterValidatorData($validator, $keys);;
 	}
 	/**
-	 * [tipsValidate description]
+	 * [validateWithApi description]
 	 * @param  Request $request [description]
 	 * @param  [type]  $table   [description]
 	 * @param  string  $keys    [description]
 	 * @return [type]           [description]
 	 */
-	public function tipsValidate(Request $request, $table, $keys = '*', Model $model = null)
+	public function validateWithApi(Request $request, $table, $keys = '*', Model $model = null)
 	{
-		$validator = $this->validate($request, $table, $keys, $model);
-		if ($validator->fails()) {
-			$request->flashExcept('password');
-			return $this->failure_validate($validator->errors());
-		}
-		return $this->filterValidatorData($validator, $keys);
+		$validator = $this->validating($request, $table, $keys, $model);
+		return $validator->fails() ? $this->failure_validate($validator->errors()) : $this->filterValidatorData($validator, $keys);
 	}
 	/**
 	 * [filterValidatorData description]

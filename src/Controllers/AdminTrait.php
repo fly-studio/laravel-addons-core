@@ -130,10 +130,10 @@ trait AdminTrait {
 
 		$paginate = $builder->paginate($pagesize, $columns, 'page', $page);
 
-		$query = compact('filters') + $extra_query;
-		array_walk($query, function($v, $k) use($paginate) {
+		$queries = array_merge_recursive(compact('filters'), $extra_query);
+		foreach ($queries as $k => $v)
 			$paginate->addQuery($k, $v);
-		});
+
 		$paginate->filters = $filters;
 		$paginate->orders = $orders;
 		return $paginate;

@@ -6,6 +6,7 @@ use Addons\Core\Tools\OutputEncrypt;
 use Illuminate\Http\Exception\HttpResponseException;
 use Addons\Core\File\Mimes;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Http\JsonResponse;
 
 trait OutputTrait {
 
@@ -37,52 +38,52 @@ trait OutputTrait {
 		return view($filename, $data)->with($this->viewData);
 	}
 
-	public function api(array $data, $encrypt = FALSE)
+	public function api(array $data, $encrypt = false)
 	{
-		return $this->_make_output('api', NULL, FALSE, $data, $encrypt);
+		return $this->_make_output('api', null, false, $data, $encrypt);
 	}
 
-	public function error($message_name = NULL, $url = FALSE, array $data = [], $export_data = FALSE)
+	public function error($message_name = null, $url = false, array $data = [], $export_data = false)
 	{
 		return $this->_make_output('error', $message_name, $url, $data, $export_data);
 	}
 
-	public function success($message_name = NULL, $url = TRUE, array $data = [], $export_data = TRUE)
+	public function success($message_name = null, $url = true, array $data = [], $export_data = true)
 	{
 		return $this->_make_output('success', $message_name, $url, $data, $export_data);
 	}
 
-	public function failure($message_name = NULL, $url = FALSE, array $data = [],$export_data = FALSE)
+	public function failure($message_name = null, $url = false, array $data = [],$export_data = false)
 	{
 		return $this->_make_output('failure', $message_name, $url, $data, $export_data);
 	}
 
-	public function warning($message_name = NULL, $url = FALSE, array $data = [],$export_data = FALSE)
+	public function warning($message_name = null, $url = false, array $data = [],$export_data = false)
 	{
 		return $this->_make_output('warning', $message_name, $url, $data, $export_data);
 	}
 
-	public function notice($message_name = NULL, $url = FALSE, array $data = [],$export_data = FALSE)
+	public function notice($message_name = null, $url = false, array $data = [],$export_data = false)
 	{
 		return $this->_make_output('notice', $message_name, $url, $data, $export_data);
 	}
 
-	protected function error_param($url = FALSE)
+	protected function error_param($url = false)
 	{
 		return $this->error('server.error_param',$url);
 	}
 
-	protected function success_login($url = TRUE, array $data = [], $export_data = TRUE)
+	protected function success_login($url = true, array $data = [], $export_data = true)
 	{
 		return $this->success('auth.success_login', $url, $data, $export_data);
 	}
 
-	protected function success_logout($url = TRUE, array $data = [], $export_data = TRUE)
+	protected function success_logout($url = true, array $data = [], $export_data = true)
 	{
 		return $this->success('auth.success_logout', $url, $data, $export_data);
 	}
 
-	protected function failure_login($url = FALSE, array $data = [], $export_data = FALSE)
+	protected function failure_login($url = false, array $data = [], $export_data = false)
 	{
 		return $this->failure('auth.failure_login', $url, $data, $export_data);
 	}
@@ -96,27 +97,28 @@ trait OutputTrait {
 				$messages[] = trans(Lang::has('validation.failure_post.list') ? 'validation.failure_post.list' : 'core::common.validation.failure_post.list', compact('message'));
 			}
 		}
-		return $this->_make_output('failure', 'validation.failure_post', FALSE, ['errors' => $errors, 'messages' => implode($messages)], TRUE);
+		return $this->_make_output('failure', 'validation.failure_post', false, ['errors' => $errors, 'messages' => implode($messages)], true);
 	}
 
-	protected function failure_noexists($url = FALSE, array $data = [], $export_data = FALSE)
+	protected function failure_noexists($url = false, array $data = [], $export_data = false)
 	{
 		return $this->failure('document.failure_noexist', $url, $data, $export_data);
 	}
 
-	protected function failure_owner($url = FALSE, array $data = [], $export_data = FALSE)
+	protected function failure_owner($url = false, array $data = [], $export_data = false)
 	{
 		return $this->failure('document.failure_owner', $url, $data, $export_data);
 	}
 
-	protected function _make_output($type, $message_name = NULL, $url = FALSE, array $data = [], $export_or_encrypt = FALSE)
+	protected function _make_output($type, $message_name = null, $url = false, array $data = [], $export_or_encrypt = false)
 	{
 		$result = [
 			'result' => $type,
-			'uid' => !empty($this->user) ? $this->user->getKey() : NULL,
+			'uid' => !empty($this->user) ? $this->user->getKey() : null,
 			'debug' => env('APP_DEBUG'),
 		];
-
+		$data = json_decode(json_encode($data), true); //turn Object to Array
+		
 		switch($type)
 		{
 			case 'api':
@@ -126,7 +128,7 @@ trait OutputTrait {
 					$encrypt = new OutputEncrypt;
 					$key = $encrypt->getEncryptedKey();
 					$result += [
-						'data' => empty($key) ? NULL : $encrypt->encode($data), //如果key不对,就不用耗费资源加密了
+						'data' => empty($key) ? null : $encrypt->encode($data), //如果key不对,就不用耗费资源加密了
 						'key' => $key,
 						'encrypt' => true,
 					];
@@ -164,36 +166,42 @@ trait OutputTrait {
 
 		$result += [
 			'time' => time(),
-			'duration' => microtime(TRUE) - LARAVEL_START,
+			'duration' => microtime(true) - LARAVEL_START,
 		];
 		return $this->output($result);
 	}
 
-	protected function output(array $data, $filename = NULL)
+	protected function output(array $data)
 	{
 		$request = app('request');
 		$charset = config('app.charset');
-		$of = strtolower($request->input('of'));
-		$jsonp = isset($_GET['jsonp']) ? $_GET['jsonp'] : null; 
-		empty($jsonp) && $jsonp = isset($_GET['callback']) ? $_GET['callback'] : null;
+		$of = strtolower($request->input('of', $request->expectsJson() ? '' : 'html')); //默认是html
+		$callback = $request->query('callback'); //必须是GET请求，以免和POST字段冲突
 
-		if (!in_array($of, ['js', 'json', 'jsonp', 'xml', 'txt', 'text', 'csv', 'xls', 'xlsx', 'yaml', 'html', 'pdf' ]))
-		{
-			if ($request->expectsJson()) //自动切换ajax状态下of为json
-				$of = empty($jsonp) ? 'json' : 'jsonp';
-			else
-				$of = 'html';
-		}
 		$response = null;
-		if (in_array($of, ['csv', 'xls', 'xlsx', 'pdf']))
-		{
-			$filename = Output::$of($data['data']);
-			$response = response()->download($filename, date('YmdHis').'.'.$of, ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)])->deleteFileAfterSend(TRUE);
-		} else {
-			$content = $of != 'html' ? Output::$of($data, $jsonp) : $this->view('tips', ['_data' => $data]);
-			$response = response($content)->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
+		switch ($of) {
+			case 'xml':
+			case 'txt':
+			case 'text':
+			case 'html': //text
+				$content = $of != 'html' ? Output::$of($data) : $this->view('tips', ['_data' => $data]);
+				$response = response($content)->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
+				break;
+			case 'yaml':
+			case 'csv':
+			case 'xls':
+			case 'xlsx':
+			case 'pdf': //download
+				$filename = Output::$of($data['data']);
+				$response = response()->download($filename, date('YmdHis').'.'.$of, ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)])->deleteFileAfterSend(true);
+				break;
+			default: //其余全部为json
+				$response = (new JsonResponse($data))->withCallback($callback);
+				break;
 		}
-		if (isset($data['result']) && !in_array($data['result'], ['success', 'api'])) throw new HttpResponseException($response); // 如果failure 则直接抛出
+
+		if (isset($data['result']) && !in_array($data['result'], ['success', 'api']))
+			throw new HttpResponseException($response); // 如果failure 则直接抛出
 		return $response;
 	}
 
