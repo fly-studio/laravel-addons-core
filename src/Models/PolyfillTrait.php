@@ -3,6 +3,9 @@ namespace Addons\Core\Models;
 
 use Illuminate\Support\Str;
 trait PolyfillTrait{
+
+	protected $originalCastTypes = ['int','integer','real','float','double','string','bool','boolean','object','array','json','collection','date','datetime','timestamp'];
+
 	public function insertUpdate(array $attributes)
 	{
 		$this->fill($attributes);
@@ -53,7 +56,7 @@ trait PolyfillTrait{
 	protected function castAttribute($key, $value)
 	{
 		$type = $this->getCastType($key);
-		if (!empty($type) && !in_array($type, ['int','integer','real','float','double','string','bool','boolean','object','array','json','collection','date','datetime','timestamp']))
+		if (!empty($type) && !in_array($type, $this->originalCastTypes))
 		{
 			$method = 'as'.Str::studly($type);
 			if (method_exists($this, $method))
@@ -72,15 +75,33 @@ trait PolyfillTrait{
 		$data = parent::attributesToArray();
 		foreach ($this->getCasts() as $key => $type)
 		{
-			//$type = $this->getCastType($key);
-			if (!empty($type) && !in_array($type, ['int','integer','real','float','double','string','bool','boolean','object','array','json','collection','date','datetime','timestamp']))
+			if (!empty($type) && !in_array($type, $this->originalCastTypes))
 			{
-				$method = 'from'.Str::studly($type);
+				$method = Str::camel($type).'ToArray';
 				if (method_exists($this, $method))
 					$data[$key] = call_user_func([$this, $method], $data[$key]);
 			}
 		}
 		return $data;
 	}
+
+	/**
+     * Set a given attribute on the model.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return $this
+     */
+    public function setAttribute($key, $value)
+    {
+		$type = $this->hasCast($key) ? $this->getCastType($key) : null;
+		if (!empty($type) && !$this->hasSetMutator($key)  && !in_array($type, $this->originalCastTypes))
+		{
+			$method = 'from'.Str::studly($type);
+			if (method_exists($this, $method))
+				$value = call_user_func([$this, $method], $value);
+		}
+		return parent::setAttribute($key, $value);
+    }
 
 }
