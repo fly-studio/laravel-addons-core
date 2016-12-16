@@ -6,12 +6,14 @@ use Addons\Core\Models\TreeTrait;
 use Addons\Core\Models\CacheTrait;
 use Addons\Core\Models\CallTrait;
 use Addons\Core\Models\PolyfillTrait;
+use Laravel\Scout\Searchable;
 
 class Tree extends Model {
 	use CacheTrait, CallTrait, PolyfillTrait;
+	use Searchable;
 	use TreeTrait;
+	
 	//不能批量赋值
-
 	protected $guarded = ['id', 'level', 'path', 'order']; //这些字段禁止维护
 
 	public $parentKey = 'pid'; //必要字段                MySQL需加索引

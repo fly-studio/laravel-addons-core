@@ -5,7 +5,7 @@ use Closure, Schema, DB;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-trait AdminTrait {
+trait ApiTrait {
 
 	private function _getColumns(Builder $builder)
 	{
@@ -40,35 +40,53 @@ trait AdminTrait {
 	 * @param  Builder $builder 
 	 * @return array           返回筛选(搜索)的参数
 	 */
-	private function _doFilter(Request $request, Builder $builder, $columns = [])
+	private function _doFilters(Request $request, Builder $builder, $columns = [])
 	{
 		$filters = $this->_getFilters($request);
 		$operators = [
-			'in' => 'in', 'not_in' => 'not in', 'is' => 'is', 'min' => '>=', 'greater_equal' => '>=', 'max' => '<=', 'less_equal' => '<=', 'between' => 'between', 'not_between' => 'not between', 'greater' => '>', 'less' => '<', 'not_equal' => '<>', 'inequal' => '<>', 'equal' => '=',
-			'like' => 'like', 'left_like' => 'like', 'right_like' => 'like', 'rlike' => 'rlike', 'ilike' => 'ilike', 'like_binary' => 'like binary', 'left_like_binary' => 'like binary', 'right_like_binary' => 'like binary', 'not_like' => 'not like', 'not_left_like' => 'not like', 'not_right_like' => 'not like',
+			'in' => 'in', 'nin' => 'not in', 'is' => 'is', 
+			'min' => '>=', 'gte' => '>=', 'max' => '<=', 'lte' => '<=', 'btw' => 'between', 'nbtw' => 'not between', 'gt' => '>', 'lt' => '<',
+			'neq' => '<>', 'ne' => '<>', 'eq' => '=', 'equal' => '=',
+			'lk' => 'like', 'like' => 'like', 'lkb' => 'like binary',
+			'nlk' => 'not like', 'nlkb' => 'not like binary',
+			'rlk' => 'rlike', 'ilk' => 'ilike',
 			'and' => '&', 'or' => '|', 'xor' => '^', 'left_shift' => '<<', 'right_shift' => '>>', 'bitwise_not' => '~', 'bitwise_not_any' => '~*', 'not_bitwise_not' => '!~', 'not_bitwise_not_any' => '!~*',
 			'regexp' => 'regexp', 'not_regexp' => 'not regexp', 'similar_to' => 'similar to', 'not_similar_to' => 'not similar to',
 		];
-
-		array_walk($filters, function($v, $key) use ($builder, $operators, $columns) {
+		foreach ($filters as $key => $filter)
+		{
 			$key = !empty($columns[$key]) ? $columns[$key] : $key;
-			array_walk($v, function($value, $method) use ($builder, $key, $operators){
-				if (empty($value) && $value !== '0') return; //''不做匹配
-				else if (in_array($method, ['like', 'like_binary', 'not_like'])) $value = '%'.$value.'%';
-				else if (in_array($method, ['left_like', 'left_like_binary', 'not_left_like'])) $value = $value.'%';
-				else if (in_array($method, ['right_like', 'right_like_binary', 'not_right_like'])) $value = '%'.$value;
-				if ($operators[$method] == 'in')
+			foreach ($filter as $method => $value)
+			{
+				$operator = $operators[$method];
+				if (empty($value) && $value !== '0') continue; //''不做匹配
+				else if (in_array($operator, ['like', 'like binary', 'not like', 'not like binary']))
+					$value = trim($value, '%') != $value ? $value : '%'.$value.'%'; //如果开头结尾有 % 则以用户的为准
+
+				if ($operator == 'in')
 					$builder->whereIn($key, $value);
-				else if ($operators[$method] == 'not in')
+				else if ($operator == 'not in')
 					$builder->whereNotIn($key, $value);
 				else
-					$builder->where($key, $operators[$method] ?: '=' , $value);
-			});
-		});
+					$builder->where($key, $operator ?: '=' , $value);
+			}
+		}
 		return $filters;
 	}
 
-	private function _doOrder(Request $request, Builder $builder, $columns = [])
+	private function _doQueries(Request $request, Builder $builder)
+	{
+		$queries = $this->_getQueries($request);
+		foreach ($queries as $key => $value)
+		{
+			$method = 'scope'.ucfirst($key);
+			if (method_exists($builder->getModel(), $method))
+				call_user_func_array([$builder, $key], [$value]);
+		}
+		return $queries;
+	}
+
+	private function _doOrders(Request $request, Builder $builder, $columns = [])
 	{
 		$orders = $this->_getOrders($request, $builder);
 		foreach ($orders as $k => $v)
@@ -77,7 +95,7 @@ trait AdminTrait {
 	}
 	/**
 	 * 获取筛选(搜索)的参数
-	 * &filters[username][like]=abc&filters[gender][equal]=1
+	 * &f[username][lk]=abc&f[gender][eq]=1
 	 * 
 	 * @param  Request $request 
 	 * @param  Builder $builder 
@@ -86,11 +104,26 @@ trait AdminTrait {
 	private function _getFilters(Request $request)
 	{
 		$filters = [];
-		$inputs = $request->input('filters') ?: [];
-		foreach ($inputs as $k => $v)
-			$filters[$k] = is_array($v) ? array_change_key_case($v) : ['equal' => $v];
+		$inputs = $request->input('f', []);
+		if (!empty($inputs))
+			foreach ($inputs as $k => $v)
+				$filters[$k] = is_array($v) ? array_change_key_case($v) : ['eq' => $v];
 
 		return $filters;
+	}
+	/**
+	 * 获取全文搜索的参数
+	 * &q[ofPinyin]=abc
+	 * 
+	 * @param  Request $request 
+	 * @param  Builder $builder 
+	 * @return array           返回参数列表
+	 */
+	private function _getQueries(Request $request)
+	{
+		$inputs = $request->input('q', []);
+
+		return empty($inputs) ? [] : $inputs;
 	}
 	/**
 	 * 获取排序的参数
@@ -104,37 +137,30 @@ trait AdminTrait {
 	 */
 	private function _getOrders(Request $request, Builder $builder)
 	{
-		$columns = $request->input('columns') ?: [];
-		$inputs = $request->input('order') ?: [];
-
-		$orders = [];
-		if(!empty($columns))
-			foreach ($inputs as $v)
-				!empty($columns[$v['column']]['data']) && $orders[$columns[$v['column']]['data']] = strtolower($v['dir']); 
-		else
-			$orders = $inputs;
+		$orders = $request->input('o', []);
 		//默认按照主键的倒序
-		empty($orders) && $orders = [$builder->getModel()->getKeyName() => 'desc'];
-		return $orders;
+		return empty($orders) ? [$builder->getModel()->getKeyName() => 'desc'] : $orders;
 	}
 
 	private function _getPaginate(Request $request, Builder $builder, array $columns = ['*'], array $extra_query = [])
 	{
-		$pagesize = $request->input('pagesize') ?: ($request->input('length') ?: config('site.pagesize.admin.'.$builder->getModel()->getTable(), $this->site['pagesize']['common']));
-		$page = $request->input('page') ?: (floor(($request->input('start') ?: 0) / $pagesize) + 1);
-		if ($request->input('all') == 'true') $pagesize = 10000;//$builder->count(); //为统一使用paginate输出数据格式,这里需要将pagesize设置为整表数量
+		$size = $request->input('size') ?: config('size.models.'.$builder->getModel()->getTable(), config('size.common'));
+		$page = $request->input('page', 1);
+		if ($request->input('all') == 'true') $size = 10000;//$builder->count(); //为统一使用paginate输出数据格式,这里需要将size设置为整表数量
 
 		$tables_columns = $this->_getColumns($builder);
-		$filters = $this->_doFilter($request, $builder, $tables_columns);
-		$orders = $this->_doOrder($request, $builder, $tables_columns);
+		$filters = $this->_doFilters($request, $builder, $tables_columns);
+		$queries = $this->_doQueries($request, $builder);
+		$orders = $this->_doOrders($request, $builder, $tables_columns);
 
-		$paginate = $builder->paginate($pagesize, $columns, 'page', $page);
+		$paginate = $builder->paginate($size, $columns, 'page', $page);
 
-		$queries = array_merge_recursive(compact('filters'), $extra_query);
-		foreach ($queries as $k => $v)
+		$query_strings = array_merge_recursive(['f' => $filters, 'q' => $queries], $extra_query);
+		foreach ($query_strings as $k => $v)
 			$paginate->addQuery($k, $v);
 
 		$paginate->filters = $filters;
+		$paginate->queries = $queries;
 		$paginate->orders = $orders;
 		return $paginate;
 	}
@@ -146,7 +172,7 @@ trait AdminTrait {
 		if (!empty($callback) && is_callable($callback))
 			call_user_func_array($callback, [$paginate]); //reference Objecy
 
-		return $paginate->toArray() + ['filters' => $paginate->filters, 'orders' => $paginate->orders];
+		return $paginate->toArray() + ['filters' => $paginate->filters, 'queries' => $paginate->queries, 'orders' => $paginate->orders];
 	}
 
 	private function _getCount(Request $request, Builder $builder, $enable_filters = TRUE)
@@ -155,14 +181,15 @@ trait AdminTrait {
 		if ($enable_filters)
 		{
 			$tables_columns = $this->_getColumns($builder);
-			$this->_doFilter($request, $_b, $tables_columns);
+			$this->_doFilters($request, $_b, $tables_columns);
+			$this->_doQueries($request, $_b);
 		}
 		$query = $_b->getQuery();
 		if (!empty($query->groups)) //group by
 		{
 			return DB::table( DB::raw("({$_b->toSql()}) as sub") )
-			->mergeBindings($_b->getQuery()) // you need to get underlying Query Builder
-			->count();
+				->mergeBindings($_b->getQuery()) // you need to get underlying Query Builder
+				->count();
 		} else
 			return $_b->count();
 	}
@@ -170,10 +197,10 @@ trait AdminTrait {
 	private function _getExport(Request $request, Builder $builder, Closure $callback = NULL, array $columns = ['*']) {
 		set_time_limit(600); //10min
 
-		$pagesize = $request->input('pagesize') ?: config('site.pagesize.export', 1000);
+		$size = $request->input('size') ?: config('size.export', 1000);
 		$tables_columns = $this->_getColumns($builder);
-		$this->_doFilter($request, $builder, $tables_columns);
-		$paginate = $builder->orderBy($builder->getModel()->getKeyName(),'DESC')->paginate($pagesize, $columns);
+		$this->_doFilters($request, $builder, $tables_columns);
+		$paginate = $builder->orderBy($builder->getModel()->getKeyName(),'DESC')->paginate($size, $columns);
 		if (!empty($callback) && is_callable($callback))
 			call_user_func_array($callback, [&$paginate]);
 		$data = $paginate->toArray();
