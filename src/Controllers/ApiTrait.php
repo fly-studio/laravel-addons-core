@@ -200,6 +200,7 @@ trait ApiTrait {
 		$size = $request->input('size') ?: config('size.export', 1000);
 		$tables_columns = $this->_getColumns($builder);
 		$this->_doFilters($request, $builder, $tables_columns);
+		$this->_doQueries($request, $builder);
 		$paginate = $builder->orderBy($builder->getModel()->getKeyName(),'DESC')->paginate($size, $columns);
 		if (!empty($callback) && is_callable($callback))
 			call_user_func_array($callback, [&$paginate]);
