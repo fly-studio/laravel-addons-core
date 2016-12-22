@@ -6,11 +6,9 @@ use Addons\Core\Models\TreeTrait;
 use Addons\Core\Models\CacheTrait;
 use Addons\Core\Models\CallTrait;
 use Addons\Core\Models\PolyfillTrait;
-use Laravel\Scout\Searchable;
 
 class Tree extends Model {
 	use CacheTrait, CallTrait, PolyfillTrait;
-	use Searchable;
 	use TreeTrait;
 	
 	//不能批量赋值
