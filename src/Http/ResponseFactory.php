@@ -3,7 +3,7 @@ namespace Addons\Core\Http;
 
 use Illuminate\Routing\ResponseFactory as FactoryContract;
 use Illuminate\Support\Str;
-use Addons\Core\Http\Response;
+use Illuminate\Http\Response;
 use Addons\Core\Http\BinaryFileResponse;
 class ResponseFactory extends FactoryContract {
 

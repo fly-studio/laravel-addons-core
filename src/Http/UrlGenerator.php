@@ -20,8 +20,8 @@ class UrlGenerator extends BaseUrlGenerator {
 		$root = $this->getRootUrl($scheme, config('app.url'));
 
 		if (($queryPosition = strpos($path, '?')) !== false) {
-			$query = mb_substr($path, $queryPosition);
-			$path = mb_substr($path, 0, $queryPosition);
+			$query = substr($path, $queryPosition);
+			$path = substr($path, 0, $queryPosition);
 		} else {
 			$query = '';
 		}
