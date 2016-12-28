@@ -44,7 +44,9 @@ class SerializableRequest implements \Serializable {
             'request' => $this->request->request->all(),
             'attributes' => $this->request->attributes->all(),
             'cookies' => $this->request->cookies->all(),
-            'files' => $this->request->files->all(),
+            'files' => array_map(function($file) {
+                return (new SerializableUploadFile($file))->data();
+            }, $this->request->files->all()),
             'server' => $this->request->server->all(),
             'content' => $this->request->content,
     	];
@@ -52,7 +54,19 @@ class SerializableRequest implements \Serializable {
 
     public function invoke($data)
     {
-    	$request = Request::createFromBase(new SymfonyRequest($data['query'], $data['request'], $data['attributes'], $data['cookies'], $data['files'], $data['server'], $data['content']));
+    	$request = Request::createFromBase(
+            new SymfonyRequest(
+                $data['query'],
+                $data['request'],
+                $data['attributes'],
+                $data['cookies'],
+                array_map(function($file) {
+                    return (new SerializableUploadFile)->invoke($file);
+                }, $data['files']),
+                $data['server'],
+                $data['content']
+            )
+        );
 
         $router = app(\Illuminate\Routing\Router::class);
         $routes = $router->getRoutes();
