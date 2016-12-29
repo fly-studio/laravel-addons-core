@@ -7,6 +7,7 @@ use Illuminate\Http\Exception\HttpResponseException;
 use Addons\Core\File\Mimes;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Arr;
 
 trait OutputTrait {
 
@@ -137,24 +138,25 @@ trait OutputTrait {
 				break;
 			default:
 				$msg = $message_name;
+				$default = trans('core::common.default.'.$type );
 				if (!is_array($message_name))
 				{
-					$msg = Lang::has($message_name) ? trans($message_name) : (Lang::has('core::common.'.$message_name) ? trans('core::common.'.$message_name) : []);
-					is_string($msg) && $msg = ['content' => $msg];
-					$default = trans('core::common.default.'.$type );
-					$msg = _extends($msg, $default); //填充
+					$msg = Lang::has($message_name) ? trans($message_name) : (
+						Lang::has('core::common.'.$message_name) ? trans('core::common.'.$message_name) : []
+					);
+					!is_array($msg) && $msg = ['content' => $msg];
 				}
-
-				$default = trans('core::common.default.'.$type );
-				$msg = _extends($msg, $default);
-
+				$msg = (array)$msg + $default;
+				//替换变量
 				if (!empty($data))
 				{
+					$_d = array_dot($data, ':'); ksort($_d);
 					foreach ($msg as &$value) 
-						$value = __($value, $data); //转化成有意义的文字
+						$value = strtr($value, $_d); //转化成有意义的文字
+					unset ($_d);
 				}
 
-				$msg = array_keyfilter($msg, 'title,content');
+				$msg = array_only($msg, ['title', 'content']);
 
 				$result += [
 					'message' => $msg,

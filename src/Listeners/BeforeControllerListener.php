@@ -25,6 +25,7 @@ abstract class BeforeControllerListener extends ControllerListenerContract imple
 		$className = $event->getClassName();
 		$methodName = $event->getMethod();
 
+		app('events')->fire($className.'.before.'.$methodName);
 		return $this->loadControllerListeners($className, $methodName, func_get_args(), 'BeforeListener');
 	}
 

@@ -5,6 +5,7 @@ use Closure, Schema, DB;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 trait ApiTrait {
 
 	private function _getColumns(Builder $builder)
@@ -205,7 +206,7 @@ trait ApiTrait {
 		if (!empty($callback) && is_callable($callback))
 			call_user_func_array($callback, [&$paginate]);
 		$data = $paginate->toArray();
-		!empty($data['data']) && is_assoc($data['data'][0]) && array_unshift($data['data'], array_keys($data['data'][0]));
+		!empty($data['data']) && Arr::isAssoc($data['data'][0]) && array_unshift($data['data'], array_keys($data['data'][0]));
 		array_unshift($data['data'], [$builder->getModel()->getTable(), $data['from']. '-'. $data['to'].'/'. $data['total'], date('Y-m-d h:i:s')]);
 		return $data['data'];
 	}

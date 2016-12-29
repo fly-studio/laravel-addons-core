@@ -18,9 +18,10 @@ trait ValidatesRequests
 	
 	private function getValidationData($table, $keys, Model $model = null, $replaceToTagName = false)
 	{
-		$config = app('config')->get('validation.'.$table);
+		$config = config('validation.'.$table);
 		$keys == '*' && $keys = array_keys($config);
-		$validation_data = array_keyfilter($config, $keys);
+		!is_array($keys) && $keys = explode(',', $keys);
+		$validation_data = array_only($config, $keys);
 		$rules = $messages = $attributes = [];
 		foreach ($validation_data as $k => $v)
 		{
@@ -53,7 +54,7 @@ trait ValidatesRequests
 	protected function validating(Request $request, $table, $keys = '*', Model $model = null)
 	{
 		$validateData = $this->getValidationData($table, $keys, $model);
-		$validator = $this->getValidationFactory()->make($request->all(), $validateData['rules'], array_keyflatten($validateData['messages'], '.'), $validateData['attributes']);
+		$validator = $this->getValidationFactory()->make($request->all(), $validateData['rules'], array_dot($validateData['messages']), $validateData['attributes']);
 		return $validator;
 	}
 
@@ -103,6 +104,7 @@ trait ValidatesRequests
 	private function filterValidatorData(Validator $validator, $keys)
 	{
 		$data = $validator->getData();
-		return $keys == '*' ? $data : array_keyfilter($data, $keys);
+		$keys != '*' && !is_array($keys) && $keys = explode(',', $keys);
+		return $keys == '*' ? $data : array_only($data, $keys);
 	}
 }

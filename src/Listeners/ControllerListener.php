@@ -25,6 +25,7 @@ abstract class ControllerListener extends ControllerListenerContract implements 
 		$className = $event->getClassName();
 		$methodName = $event->getMethod();
 
+		app('events')->fire($className.'.'.$methodName);
 		return $this->loadControllerListeners($className, $methodName, func_get_args());
 	}
 
