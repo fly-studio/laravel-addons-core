@@ -133,12 +133,13 @@ class ServiceProvider extends BaseServiceProvider
 			!empty($config['register']['translator']) && $this->loadTranslationsFrom(realpath($config['path'].'resources/lang/'), $name);
 			if (!empty($config['register']['migrate']) && $this->app->runningInConsole())
 				$this->loadMigrationsFrom(realpath($config['path'].'database/migrations'));
-			foreach($config['routers'] as $key => $route)
-			{
-				$router->group(['namespace' => empty($route['namespace']) ? $config['namespace'].'\App\Http\Controllers' : $route['namespace'], 'middleware' => array_merge([$key], $route['middleware']), 'prefix' => $route['prefix']], function($router) use ($config, $key) {
-					require $config['path'].'routes/'.$key.'.php';
-				});
-			}
+			if ($config['register']['router'])
+				foreach($config['routers'] as $key => $route)
+				{
+					$router->group(['namespace' => empty($route['namespace']) ? $config['namespace'].'\App\Http\Controllers' : $route['namespace'], 'middleware' => array_merge([$key], $route['middleware']), 'prefix' => $route['prefix']], function($router) use ($config, $key) {
+						require $config['path'].'routes/'.$key.'.php';
+					});
+				}
 		}
 	}
 

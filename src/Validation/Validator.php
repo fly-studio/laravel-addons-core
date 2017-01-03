@@ -2,6 +2,7 @@
 namespace Addons\Core\Validation;
  
 use Illuminate\Validation\Validator as BaseValidator;
+use Illuminate\Support\Str;
 /**
  * 本Class主要是处理宽字符的长度、Fields检索等
  * 
@@ -278,6 +279,56 @@ class Validator extends BaseValidator {
 
 		return $jqueryRules;
 	}
+
+	/**
+     * Replace all error message place-holders with actual values.
+     *
+     * @param  string  $message
+     * @param  string  $attribute
+     * @param  string  $rule
+     * @param  array   $parameters
+     * @return string
+     */
+    protected function doReplacements($message, $attribute, $rule, $parameters)
+    {
+        $value = $this->getAttribute($attribute);
+
+        $message = str_replace(
+            [':attribute', ':ATTRIBUTE', ':Attribute'],
+            [$value, Str::upper($value), Str::ucfirst($value)],
+            $message
+        );
+
+        if (isset($this->replacers[Str::snake($rule)])) {
+            $message = $this->callReplacer($message, $attribute, Str::snake($rule), $parameters, $this);
+        } elseif (method_exists($this, $replacer = "replace{$rule}")) {
+            $message = $this->$replacer($message, $attribute, $rule, $parameters, $this);
+        }
+
+        return $message;
+    }
+
+	/**
+     * Handle dynamic calls to class methods.
+     *
+     * @param  string  $method
+     * @param  array   $parameters
+     * @return mixed
+     *
+     * @throws \BadMethodCallException
+     */
+    public function __call($method, $parameters)
+    {
+        $rule = Str::snake(substr($method, 8));
+
+        if (method_exists($this, $method))
+        	return $this->$method(...$parameters);
+        else if (isset($this->extensions[$rule])) {
+            return $this->callExtension($rule, $parameters);
+        }
+
+        throw new BadMethodCallException("Method [$method] does not exist.");
+    }
  
 }   //end of class
  

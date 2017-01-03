@@ -12,19 +12,19 @@ trait TreeTrait{
 	protected function changeParent()
 	{
 		$newParent = $this->getNode($this->getParentKey());
-		if(empty($newParent) || $this->getParentKey() == $this->getOriginal($this->getParentKeyName())) return NULL;
+		if(empty($newParent) || $this->getParentKey() == $this->getOriginal($this->parentKey)) return NULL;
 
-		if (!empty($this->getPathKeyName()))
+		if (!empty($this->pathKey))
 		{
 			$newPath = $newParent->getPathKey() . $this->getKey() . '/';
-			static::where($this->getPathKeyName(), 'LIKE', '%'.$this->getPathKey().'%')->update([$this->getPathKeyName() => DB::raw('REPLACE(`'.$this->getPathKeyName().'`, \''.$this->getPathKey().'\', \''.$newPath.'\')')]);
+			static::where($this->pathKey, 'LIKE', '%'.$this->getPathKey().'%')->update([$this->pathKey => DB::raw('REPLACE(`'.$this->pathKey.'`, \''.$this->getPathKey().'\', \''.$newPath.'\')')]);
 		}
 
-		if (!empty($this->getLevelKeyName()))
+		if (!empty($this->levelKey))
 		{
 			$deltaLevel = intval($this->getLevelKey()) - intval($newParent->getLevelKey()) - 1;
-			$ids = $this->getDescendant([])->add($this)->fetch($this->getKeyName())->toArray(); //get id pid
-			static::whereIn($this->getKeyName(), $ids)->decrement($this->getLevelKeyName(), $deltaLevel);
+			$ids = $this->getDescendant([])->add($this)->modelKeys(); //get id pid
+			static::whereIn($this->getKeyName(), $ids)->decrement($this->levelKey, $deltaLevel);
 		}
 		
 		return $this;
