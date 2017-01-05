@@ -4,7 +4,7 @@
 //插件的namespace假设为Plugins\Tools
 
 return [
-	'enable' => FALSE, //开关，已停止的插件，建议设置FALSE，以避免浪费资源
+	'enable' => FALSE, //开关，已停止的插件，建议设置FALSE，以免浪费资源
 	//插件名(英文、数字、-、_)，全局唯一，符合PHP变量名规范，为空代表使用当前文件夹名，
 	'name' => NULL, 
 	'display_name' => '', //本插件的名称，比如：工具箱
@@ -32,8 +32,8 @@ return [
 		//- 当为true时，调用下文router的namespace,prefix,middleware配置
 		'router' => false,
 		//是否将/tools/config/validation.php合并到主配置config/validation.php
-		//- 示例可以查看tools/config/valition.php
-		//- 为避免覆盖掉主配置，请谨慎设置键值
+		//- 示例可以查看tools/config/validation.php
+		//- 注意：相同键名会被覆盖
 		'validation' => false,
 	],
 	'routers' => [ //Route::group(['namespace' => '?', 'prefix' => '?', 'middleware' => '?']);
@@ -49,29 +49,26 @@ return [
 		],
 		//....
 	],
-	//全局中间件，会被自动调用
-	//参考 /app/Http/Kernel.php
-	'middleware' => [
-		// \Plugins\Tools\App\Http\Middleware\VerifyCsrfToken::class,
-	],
+	//全局中间件组，会被自动调用
+	//参考 /app/Http/Kernel.php middlewareGroups
 	'middlewareGroups' => [
 		// 'web' => [],
 		// 'api' => [],
 	],
 	//路由中间键 附加到路由中
-	//参考 /app/Http/Kernel.php
+	//参考 /app/Http/Kernel.php routeMiddleware
 	'routeMiddleware' => [
 		// 'cry' => \Plugins\Tools\App\Http\Middleware\Cry::class, 
 	],
 	//自定义artisan命令
-	//参考 /app/Console/Kernel.php
+	//参考 /app/Console/Kernel.php commands
 	'commonds' => [
         //\Plugins\Tools\App\Console\Commands\Inspire::class,
 	],
 	//插件中的模板注入到主模板（确保相同路径）暂只支持smarty
 	//- 注意：注入不是智能的，只有当主模板中有<{pluginclude file='admin/sidebar.inc.tpl'}>时，程序会尝试按照顺序插入所有插件中的模板
-	//- 插入指定插件的模板：<{pluginclude file='admin/sidebar.inc.tpl' plugins="tools;wechat;xxx"}> 或者使用原生语句<{include file='[tools]admin/sidebar.inc.tpl'}>
-	//- 为避免模板被重复(死递归)嵌套 pluginclude子模板中的pluginclude会直接忽略
+	//- 插入指定插件的模板：<{pluginclude file='admin/sidebar.inc.tpl' plugins="tools,wechat,xxx"}> 或者使用原生语句<{include file='[tools]admin/sidebar.inc.tpl'}>
+	//- 为避免模板被重复(死递归)嵌套 pluginclude子模板中使用pluginclude会报错
 	'injectViews' => [
 		// 比如 管理员后台的菜单，会尝试<{include file="[tools]admin/sidebar.inc.tpl"}>
 		// 没有这行，不会插入

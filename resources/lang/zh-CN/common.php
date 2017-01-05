@@ -96,7 +96,7 @@ return [
 		],
 		'failure_model_noexist' => [
 			'title' => '数据不存在',
-			'content' => '无法在数据库:model中查询到该条数据 <br /> :file line :line！',
+			'content' => '无法在数据库[:model]中查询到数据[:id] <br /> :file line :line！',
 		],
 	],
 ];

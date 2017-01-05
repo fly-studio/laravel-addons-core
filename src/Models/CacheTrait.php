@@ -12,14 +12,6 @@ trait CacheTrait{
 
 	protected static function bootCacheTrait()
 	{
-		/*		
-		static::created(function($model) {
-			$model->deleteFireCache();
-		});
-		static::updated(function($model) {
-			$model->deleteFireCache();
-		});
-		*/
 		static::deleted(function($model) {
 			$model->deleteFireCache();
 		});
@@ -32,7 +24,7 @@ trait CacheTrait{
 		});
 	}
 
-	protected function deleteFireCache()
+	public function deleteFireCache()
 	{
 		if (isset($this->fire_caches))
 			foreach($this->fire_caches as $key)

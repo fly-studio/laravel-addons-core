@@ -1,22 +1,27 @@
 <?php
 namespace Addons\Core\Controllers;
 
-use Addons\Core\Tools\Output;
-use Addons\Core\Tools\OutputEncrypt;
+use BadMethodCallException;
 use Illuminate\Http\Exception\HttpResponseException;
-use Addons\Core\File\Mimes;
-use Illuminate\Support\Facades\Lang;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Arr;
-
+use Addons\Core\Http\OutputResponse;
+use Addons\Core\Http\ApiResponse;
+use Addons\Core\Http\OfficeResponse;
+use Auth;
 trait OutputTrait {
 
 	protected $viewData = [];
+	protected $outputTable = [
+		'error_param' => 'server.error_param',
+		'success_login' => 'auth.success_login',
+		'success_logout' => 'auth.success_logout',
+		'failure_login' => 'auth.failure_login',
+		'failure_noexists' => 'document.failure_noexist',
+		'failure_owner' => 'document.failure_owner',
+	];
 
 	public function __set($key, $value)
 	{
 		$this->viewData[$key] = $value;
-		//view()->share($key, $value);
 	}
 
 	public function __get($key)
@@ -34,59 +39,56 @@ trait OutputTrait {
 		unset($this->viewData[$key]);
 	}
 
+	protected function subtitle($title, $url = NULL, $target = '_self')
+	{
+		$titles = config('settings.subtitles', []);
+		config(['settings.subtitles' => array_merge($titles, compact('title', 'url', 'target'))]);
+	}
+
 	protected function view($filename, $data = [])
-	{		
+	{
+		$this->viewData['_user'] = Auth::user();
 		return view($filename, $data)->with($this->viewData);
 	}
 
-	public function api(array $data, $encrypt = false)
+	public function __call($method, $parameters)
 	{
-		return $this->_make_output('api', null, false, $data, $encrypt);
-	}
+		list($type) = explode('_', $method);
+		if (in_array($type, ['error', 'failure', 'api', 'export', 'success', 'notice', 'warning']))
+		{
+			if ($method == 'api')
+			{
+				list($data, $encryptd) = $parameters + [[], false];
+				$response = new ApiResponse();
+				return $response->setData($data, $encryptd);
+			}
+			else if ($method == 'export')
+			{
+				list($data) = $parameters + [[]];
+				$response = new OfficeResponse();
+				return $response->setData($data);
+			}
+			// $this->success($message_name = null, $url = true, $data = [], $showData = true);
+			// $this->failure,notice,warning($message_name = null, $url = false, $data = [], $showData = false);
+			// $this->error_param($url = false, $data = [], $showData = false);
+			// $this->success_login($url = true, $data = [], $showData = true);
+			else if ($method == $type || isset($this->outputTable[$method]))
+			{
+				if ($method != $type) array_unshift($parameters, $this->outputTable[$method]);
 
-	public function error($message_name = null, $url = false, array $data = [], $export_data = false)
-	{
-		return $this->_make_output('error', $message_name, $url, $data, $export_data);
-	}
+				list($message_name, $url, $data, $showData) = $parameters + ($type == 'success' ? [null, true, [], true] : [null, false, [], false]);
 
-	public function success($message_name = null, $url = true, array $data = [], $export_data = true)
-	{
-		return $this->_make_output('success', $message_name, $url, $data, $export_data);
-	}
+				$response = new OutputResponse();
+				$response->setResult($type)->setMessage($message_name, $data)->setUrl($url);
+				if ($showData) $response->setData($data);
 
-	public function failure($message_name = null, $url = false, array $data = [],$export_data = false)
-	{
-		return $this->_make_output('failure', $message_name, $url, $data, $export_data);
-	}
+				if ($type != 'success')
+					throw new HttpResponseException($response); // 如果failure 则直接抛出
 
-	public function warning($message_name = null, $url = false, array $data = [],$export_data = false)
-	{
-		return $this->_make_output('warning', $message_name, $url, $data, $export_data);
-	}
-
-	public function notice($message_name = null, $url = false, array $data = [],$export_data = false)
-	{
-		return $this->_make_output('notice', $message_name, $url, $data, $export_data);
-	}
-
-	protected function error_param($url = false)
-	{
-		return $this->error('server.error_param',$url);
-	}
-
-	protected function success_login($url = true, array $data = [], $export_data = true)
-	{
-		return $this->success('auth.success_login', $url, $data, $export_data);
-	}
-
-	protected function success_logout($url = true, array $data = [], $export_data = true)
-	{
-		return $this->success('auth.success_logout', $url, $data, $export_data);
-	}
-
-	protected function failure_login($url = false, array $data = [], $export_data = false)
-	{
-		return $this->failure('auth.failure_login', $url, $data, $export_data);
+				return $response;
+			}
+		}
+        throw new BadMethodCallException("Method [{$method}] does not exist.");
 	}
 
 	protected function failure_validate(\Illuminate\Support\MessageBag $messagebag)
@@ -98,113 +100,7 @@ trait OutputTrait {
 				$messages[] = trans(Lang::has('validation.failure_post.list') ? 'validation.failure_post.list' : 'core::common.validation.failure_post.list', compact('message'));
 			}
 		}
-		return $this->_make_output('failure', 'validation.failure_post', false, ['errors' => $errors, 'messages' => implode($messages)], true);
-	}
-
-	protected function failure_noexists($url = false, array $data = [], $export_data = false)
-	{
-		return $this->failure('document.failure_noexist', $url, $data, $export_data);
-	}
-
-	protected function failure_owner($url = false, array $data = [], $export_data = false)
-	{
-		return $this->failure('document.failure_owner', $url, $data, $export_data);
-	}
-
-	protected function _make_output($type, $message_name = null, $url = false, array $data = [], $export_or_encrypt = false)
-	{
-		$result = [
-			'result' => $type,
-			'uid' => !empty($this->user) ? $this->user->getKey() : null,
-			'debug' => env('APP_DEBUG'),
-		];
-		$data = json_decode(json_encode($data), true); //turn Object to Array
-		
-		switch($type)
-		{
-			case 'api':
-				//加密数据
-				if ($export_or_encrypt)
-				{
-					$encrypt = new OutputEncrypt;
-					$key = $encrypt->getEncryptedKey();
-					$result += [
-						'data' => empty($key) ? null : $encrypt->encode($data), //如果key不对,就不用耗费资源加密了
-						'key' => $key,
-						'encrypt' => true,
-					];
-				} else 
-					$result += ['data' => $data, 'encrypt' => false];
-				break;
-			default:
-				$msg = $message_name;
-				$default = trans('core::common.default.'.$type );
-				if (!is_array($message_name))
-				{
-					$msg = Lang::has($message_name) ? trans($message_name) : (
-						Lang::has('core::common.'.$message_name) ? trans('core::common.'.$message_name) : []
-					);
-					!is_array($msg) && $msg = ['content' => $msg];
-				}
-				$msg = (array)$msg + $default;
-				//替换变量
-				if (!empty($data))
-				{
-					$_d = array_dot($data, ':'); ksort($_d);
-					foreach ($msg as &$value) 
-						$value = strtr($value, $_d); //转化成有意义的文字
-					unset ($_d);
-				}
-
-				$msg = array_only($msg, ['title', 'content']);
-
-				$result += [
-					'message' => $msg,
-					'url' => is_string($url) ? url($url) : $url,
-					'data' => $export_or_encrypt ? $data : [],
-				];
-				break;
-		}
-
-		$result += [
-			'time' => time(),
-			'duration' => microtime(true) - LARAVEL_START,
-		];
-		return $this->output($result);
-	}
-
-	protected function output(array $data)
-	{
-		$request = app('request');
-		$charset = config('app.charset');
-		$of = strtolower($request->input('of', $request->expectsJson() ? '' : 'html')); //默认是html
-		$callback = $request->query('callback'); //必须是GET请求，以免和POST字段冲突
-
-		$response = null;
-		switch ($of) {
-			case 'xml':
-			case 'txt':
-			case 'text':
-			case 'html': //text
-				$content = $of != 'html' ? Output::$of($data) : $this->view('tips', ['_data' => $data]);
-				$response = response($content)->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
-				break;
-			case 'yaml':
-			case 'csv':
-			case 'xls':
-			case 'xlsx':
-			case 'pdf': //download
-				$filename = Output::$of($data['data']);
-				$response = response()->download($filename, date('YmdHis').'.'.$of, ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)])->deleteFileAfterSend(true);
-				break;
-			default: //其余全部为json
-				$response = (new JsonResponse($data))->withCallback($callback);
-				break;
-		}
-
-		if (isset($data['result']) && !in_array($data['result'], ['success', 'api']))
-			throw new HttpResponseException($response); // 如果failure 则直接抛出
-		return $response;
+		return $this->failure('validation.failure_post', false, ['errors' => $errors, 'messages' => implode($messages)], true);
 	}
 
 }
