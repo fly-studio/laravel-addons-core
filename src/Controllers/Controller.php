@@ -19,7 +19,7 @@ class Controller extends BaseController {
 		event(new BeforeControllerEvent($this, $method));
 
 		// check current user's permissions
-		$this->checkPermission($method);
+		if ($this->addons) $this->checkPermission($method);
 		
 		$response = call_user_func_array([$this, $method], $parameters);
 		//event successful

@@ -4,6 +4,8 @@ namespace Addons\Core\Http;
 use Symfony\Component\HttpFoundation\Request;
 use Addons\Core\Tools\Output;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use Illuminate\Http\JsonResponse;
 use Addons\Core\File\Mimes;
@@ -16,6 +18,7 @@ class OutputResponse extends Response {
 	protected $message = null;
 	protected $url = false;
 	protected $result = 'success';
+	protected $outputRaw = false;
 
 	public function setResult($result)
 	{
@@ -59,11 +62,12 @@ class OutputResponse extends Response {
 		return $this->url;
 	}
 
-	public function setData($data)
+	public function setData($data, $outputRaw = false)
 	{
 		$data = json_decode(json_encode($data), true); //turn Object to Array
 		//
 		$this->data = $data;
+		$this->outputRaw = $outputRaw;
 		return $this;
 	}
 
@@ -79,16 +83,18 @@ class OutputResponse extends Response {
 			$this->message = null;
 			return $this;
 		}
-		$message = is_array($message_name) ? $message_name : trans(Lang::has($message_name) || !Lang::has('core::common.'.$message_name) ? $message_name : 'core::common.'.$message_name);
+		$message = is_array($message_name) ? $message_name : trans($message_name);
 
-		if (!empty($transDatatra))
+		if (!empty($transData))
 		{
 			$translator = app('translator');
 			if (is_array($message))
+			{
 				foreach ($message as &$v)
-					$v = call_class_method($translator, 'makeReplacements', $v, $transData);
+					$v = $this->makeReplacements($v, $transData);
+			}
 			else 
-				$message = call_class_method($translator, 'makeReplacements' , $transData);
+				$message = $this->makeReplacements($message, $transData);
 		}
 		$this->message = $message;
 		return $this;
@@ -107,7 +113,7 @@ class OutputResponse extends Response {
 
 	public function getOutputData()
 	{
-		$result = [
+		$result = $this->outputRaw ? $this->getData() : [
 			'result' => $this->getResult(),
 			'status_code' => $this->getStatusCode(),
 			'uid' => Auth::check() ? Auth::user()->getKey() : null,
@@ -143,4 +149,40 @@ class OutputResponse extends Response {
 		}
 		return $response;
 	}
+
+	/**
+     * Make the place-holder replacements on a line.
+     *
+     * @param  string  $line
+     * @param  array   $replace
+     * @return string
+     */
+    protected function makeReplacements($line, array $replace)
+    {
+        $replace = $this->sortReplacements($replace);
+        $replace = Arr::dot($replace);
+
+        foreach ($replace as $key => $value) {
+            $line = str_replace(
+                [':'.$key, ':'.Str::upper($key), ':'.Str::ucfirst($key)],
+                [$value, Str::upper($value), Str::ucfirst($value)],
+                $line
+            );
+        }
+
+        return $line;
+    }
+
+    /**
+     * Sort the replacements array.
+     *
+     * @param  array  $replace
+     * @return array
+     */
+    protected function sortReplacements(array $replace)
+    {
+        return (new Collection($replace))->sortBy(function ($value, $key) {
+            return mb_strlen($key) * -1;
+        })->all();
+    }
 }

@@ -13,7 +13,7 @@ use Addons\Core\Http\SerializableRequest;
 use Addons\Core\Http\SerializableResponse;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
-class ControllerEvent
+abstract class ControllerEvent
 {
     use InteractsWithSockets;
     use SerializesAndRestoresModelIdentifiers;
@@ -37,12 +37,12 @@ class ControllerEvent
         $this->response = (new SerializableResponse($response))->data();
     }
 
-	public function getClass()
+	public function getController()
     {
         return $this->controllerObject;
     }
 
-    public function getClassName()
+    public function getControllerName()
     {
         return get_class($this->controllerObject);
     }

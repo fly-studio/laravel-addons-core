@@ -6,10 +6,11 @@ use Illuminate\Http\Exception\HttpResponseException;
 use Addons\Core\Http\OutputResponse;
 use Addons\Core\Http\ApiResponse;
 use Addons\Core\Http\OfficeResponse;
-use Auth;
+use Auth, Lang;
 trait OutputTrait {
 
 	protected $viewData = [];
+	protected $addons = true;
 	protected $outputTable = [
 		'error_param' => 'server.error_param',
 		'success_login' => 'auth.success_login',
@@ -17,6 +18,7 @@ trait OutputTrait {
 		'failure_login' => 'auth.failure_login',
 		'failure_noexists' => 'document.failure_noexist',
 		'failure_owner' => 'document.failure_owner',
+		'failure_post' => 'validation.failure_post',
 	];
 
 	public function __set($key, $value)
@@ -47,7 +49,7 @@ trait OutputTrait {
 
 	protected function view($filename, $data = [])
 	{
-		$this->viewData['_user'] = Auth::user();
+		if ($this->addons) $this->viewData['_user'] = Auth::user();
 		return view($filename, $data)->with($this->viewData);
 	}
 
@@ -74,7 +76,7 @@ trait OutputTrait {
 			// $this->success_login($url = true, $data = [], $showData = true);
 			else if ($method == $type || isset($this->outputTable[$method]))
 			{
-				if ($method != $type) array_unshift($parameters, $this->outputTable[$method]);
+				if ($method != $type) array_unshift($parameters, Lang::has($this->outputTable[$method]) ? $this->outputTable[$method] : 'core::common.'.$this->outputTable[$method]);
 
 				list($message_name, $url, $data, $showData) = $parameters + ($type == 'success' ? [null, true, [], true] : [null, false, [], false]);
 
@@ -100,7 +102,7 @@ trait OutputTrait {
 				$messages[] = trans(Lang::has('validation.failure_post.list') ? 'validation.failure_post.list' : 'core::common.validation.failure_post.list', compact('message'));
 			}
 		}
-		return $this->failure('validation.failure_post', false, ['errors' => $errors, 'messages' => implode($messages)], true);
+		return $this->failure_post(false, ['errors' => $errors, 'messages' => implode($messages)], true);
 	}
 
 }

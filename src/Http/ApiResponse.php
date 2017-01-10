@@ -9,6 +9,7 @@ class ApiResponse extends OutputResponse {
 	protected $result = 'api';
 	private $encrypted = false;
 	private $encryptedKey = null;
+	protected $outputRaw = false;
 
 	public function getFormatter()
 	{

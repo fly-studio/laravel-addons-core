@@ -1,6 +1,7 @@
 <?php
 namespace Addons\Core\Http;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 class SerializableRequest implements \Serializable {
 

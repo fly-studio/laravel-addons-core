@@ -6,15 +6,15 @@ use Illuminate\Support\Str;
 
 class ControllerListener
 {
-	protected function loadControllerListeners($className, $methodName, $parameters, $guessClassPostfix = 'Listener')
+	protected function loadControllerListeners($controllerName, $methodName, $parameters, $guessClassPostfix = 'Listener')
 	{
 		$listenerClasses = [];
 		foreach($this->controllerListeners as $key => $listeners)
-			if (Str::is($key, $className))
-				array_merge($listenerClasses, $listeners);
+			if (Str::is($key, $controllerName))
+				$listenerClasses = array_merge($listenerClasses, $listeners);
 
 		//猜测监听器类名、方法名
-		$guessClass = str_replace('\Http\Controllers\\', '\Listeners\\', $className).$guessClassPostfix;
+		$guessClass = str_replace('\Http\Controllers\\', '\Listeners\\', $controllerName).$guessClassPostfix;
 		$guessMethod = $methodName;
 
 		empty($listenerClasses) && class_exists($guessClass) && $listenerClasses[] = $guessClass;
