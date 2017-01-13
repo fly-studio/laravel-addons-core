@@ -59,10 +59,7 @@ abstract class ControllerEvent
 
     public function getRequest()
     {
-        static $request;
-        empty($request) && $request = (new SerializableRequest)->invoke($this->request);
-
-        return $request;
+        return (new SerializableRequest)->invoke($this->request);
     }
 
     public function getRoute($param = null)
@@ -73,9 +70,6 @@ abstract class ControllerEvent
 
     public function getResponse()
     {
-        static $response;
-        empty($response) && $response = (new SerializableResponse)->invoke($this->response);
-        
-        return $response;
+        return (new SerializableResponse)->invoke($this->response);
     }
 }
