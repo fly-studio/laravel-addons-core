@@ -91,7 +91,7 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 		} else {
 			switch (substr($_SERVER['SERVER_SOFTWARE'], 0, (int)strpos($_SERVER['SERVER_SOFTWARE'],'/'))) {
 				case 'nginx':
-					$this->headers->set('X-Accel-Redirect', env('APP_PATH').'/'.relative_path($this->file->getPathname(), APPPATH));
+					$this->headers->set('X-Accel-Redirect', rtrim(config('session.path'), '\\/').'/'.relative_path($this->file->getPathname(), base_path()));
 					$this->headers->set('X-Accel-Buffering', 'no');
 					//$this->headers->set('X-Accel-Limit-Rate', '102400'); //速度限制 Byte/s
 					//$this->headers('Accept-Ranges', 'none');//单线程 限制多线程

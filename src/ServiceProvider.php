@@ -1,13 +1,14 @@
 <?php
 namespace Addons\Core;
 
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use Addons\Core\Validation\Validator;
-
-use Addons\Core\Http\ResponseFactory;
+use Illuminate\Support\Str;
 use Addons\Core\Http\UrlGenerator;
 use Symfony\Component\Finder\Finder;
-use Illuminate\Support\Str;
+use Addons\Core\Validation\Validator;
+use Addons\Core\Http\ResponseFactory;
+use Addons\Core\Events\EventDispatcher;
+use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+
 class ServiceProvider extends BaseServiceProvider
 {
 	/**
@@ -45,7 +46,7 @@ class ServiceProvider extends BaseServiceProvider
 		$original_config = config('plugin');config()->offsetUnset('plugin');
 		$router = $this->app['router'];
 		$kernel = $this->app[\Illuminate\Contracts\Http\Kernel::class];
-		$consoleKernel = $this->app[\Illuminate\Contracts\Console\Kernel::class];
+		//$consoleKernel = $this->app[\Illuminate\Contracts\Console\Kernel::class];
 		$paths = [base_path('vendor')];
 		is_dir(PLUGINSPATH.'vendor') && array_unshift($paths, PLUGINSPATH.'vendor');
 		foreach (Finder::create()->directories()->in($paths)->depth(0) as $path)
@@ -86,7 +87,7 @@ class ServiceProvider extends BaseServiceProvider
 			// or
 			//!empty($config['middleware']) && set_property($kernel, 'middleware', array_merge(get_property($kernel, 'middleware'), $config['middleware']));
 			//register commands
-			!empty($config['commands']) && $this->commands($config['commands']);
+
 
 			//这里提供更加灵活的plugins/ServiceProvider.php的配置方式，注意$config['register']中配置所对应的程序会优先于plugins/ServiceProvider.php
 			$provider = $namespace.'\ServiceProvider';
@@ -133,12 +134,22 @@ class ServiceProvider extends BaseServiceProvider
 			if (!empty($config['register']['migrate']) && $this->app->runningInConsole())
 				$this->loadMigrationsFrom(realpath($config['path'].'database/migrations'));
 			if ($config['register']['router'])
-				foreach($config['routers'] as $key => $route)
+				foreach($config['router'] as $key => $route)
 				{
 					$router->group(['namespace' => empty($route['namespace']) ? $config['namespace'].'\App\Http\Controllers' : $route['namespace'], 'middleware' => array_merge([$key], $route['middleware']), 'prefix' => $route['prefix']], function($router) use ($config, $key) {
 						require $config['path'].'routes/'.$key.'.php';
 					});
 				}
+			!empty($config['commands']) && $this->commands($config['commands']);
+
+			if (!empty($config['register']['console']))
+				require $config['path'].'routes/console.php';
+
+			if (!empty($config['register']['event']))
+				app(EventDispatcher::class)->group(['namespace' => $config['namespace'].'\App'], function($eventer) use($config) {
+					require $config['path'].'routes/event.php';
+				});
+
 		}
 	}
 

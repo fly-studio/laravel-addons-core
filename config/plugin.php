@@ -16,27 +16,38 @@ return [
 	//hi_world    ->    Plugins\HiWorld
 	'namespace' => NULL, 
 	'path' => NULL, //本插件的路径，这个值不用赋值，会被程序自动配置
-	'register' => [ //注册namespace
-		//是否注册/tools/resources/views到视图
+	'register' => [ //如果插件中没有下列项目，建议关闭以节约系统资源
+		//是否注册视图
+		//- 读取目录 /tools/resources/views/
 		//- Controller中这样调用：view('tools:system.xxx'); 对应/tools/resources/views/system/xxx.tpl
 		//- smarty模板中这样调用：<{include file="[tools]system/nav.inc.tpl"}>
 		'view' => false, 
-		//是否注册/tools/database/migrations到迁移
-		'migrate' => false, 
 		//是否注册/tools/resources/lang到语言包
-		//- Controller中这样调用：lang('tools:valition.alpha_dash');
-		//- smarty模板中这样调用：<{'tools:valition.alpha_dash'|lang}>
+		//- Controller中这样调用：trans('tools:valition.alpha_dash');
+		//- smarty模板中这样调用：<{'tools:valition.alpha_dash'|trans}>
 		'translator' => false,
-		//是否自动设置路由
-		//- 自动加载/tools/routes.php
-		//- 当为true时，调用下文router的namespace,prefix,middleware配置
+		//是否注册数据库迁移文件
+		// - 自动加载/tools/database/migrations/*.php
+		// - 当执行php artisan migrate时，目录下的文件自动导入数据库
+		'migrate' => false, 
+		//是否设置路由
+		//- 目前有web, api 两种路由模式
+		//- 自动加载/tools/routes/web.php,api.php中的路由
 		'router' => false,
 		//是否将/tools/config/validation.php合并到主配置config/validation.php
 		//- 示例可以查看tools/config/validation.php
 		//- 注意：相同键名会被覆盖
 		'validation' => false,
+		//是否加载Command合集
+		//- 自动加载/tools/routes/console.php
+		//- 具体请查看主程序下的 routes/console.php
+		'console' => false,
+		//是否加载Event合集
+		//- 在主程序下的 routes/listener.php 是L+项目特有的内容，可以将众多listener放在在一起，方便执行以及查询
+		//- 自动加载/tools/routes/listener.php
+		'listener' => false,
 	],
-	'routers' => [ //Route::group(['namespace' => '?', 'prefix' => '?', 'middleware' => '?']);
+	'router' => [ //Route::group(['namespace' => '?', 'prefix' => '?', 'middleware' => '?']);
 		'web' => [
 			'namespace' => NULL, //本插件下Controller的路由的namespace，空代表使用Plugins\tools\App\Http\Controllers
 			'prefix' => '/', //路由的prefix，空代表 / (根目录)

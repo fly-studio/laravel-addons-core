@@ -1,13 +1,10 @@
 <?php
 namespace Addons\Core\Controllers;
 
-use Illuminate\Routing\Controller as BaseController;
-use App\Role;
-//Facades
 use Addons\Core\Controllers\OutputTrait;
 use Addons\Core\Controllers\PermissionTrait;
-use Addons\Core\Events\BeforeControllerEvent;
 use Addons\Core\Events\ControllerEvent;
+use Illuminate\Routing\Controller as BaseController;
 
 class Controller extends BaseController {
 	use PermissionTrait, OutputTrait;
@@ -15,16 +12,13 @@ class Controller extends BaseController {
 	public function callAction($method, $parameters)
 	{
 		//event before
-		event(get_class($this).'.before.'.$method);
-		event(new BeforeControllerEvent($this, $method));
-
+		event('controller.before: '.get_class($this).'@'.$method, new ControllerEvent($this, $method));
 		// check current user's permissions
 		if ($this->addons) $this->checkPermission($method);
 		
 		$response = call_user_func_array([$this, $method], $parameters);
 		//event successful
-		event(get_class($this).'.'.$method);
-		event(new ControllerEvent($this, $method, $response));
+		event('controller.after: '.get_class($this).'@'.$method, new ControllerEvent($this, $method, null, $response));
 		return $response;
 	}
 
