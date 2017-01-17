@@ -50,7 +50,7 @@ class EventDispatcher {
 
 	public function controller($controller, $listener, $type = 'after', $priority = 0)
 	{
-		if (strpos($controller, '@') === false) $controller .= '@*';
+		if (strpos($controller, '@') === false && !Str::endsWith($controller, '*')) $controller .= '@*';
 		$this->execute("controller.{$type}: ", $controller, $listener, $priority);
 	}
 

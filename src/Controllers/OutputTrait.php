@@ -2,7 +2,8 @@
 namespace Addons\Core\Controllers;
 
 use BadMethodCallException;
-use Illuminate\Http\Exception\HttpResponseException;
+//use Illuminate\Http\Exception\HttpResponseException;
+use Addons\Core\Exceptions\OutputResponseException;
 use Addons\Core\Http\OutputResponse;
 use Addons\Core\Http\ApiResponse;
 use Addons\Core\Http\OfficeResponse;
@@ -85,24 +86,12 @@ trait OutputTrait {
 				if ($showData) $response->setData($data);
 
 				if ($type != 'success')
-					throw new HttpResponseException($response); // 如果failure 则直接抛出
+					throw new OutputResponseException($response); // 如果failure 则直接抛出
 
 				return $response;
 			}
 		}
         throw new BadMethodCallException("Method [{$method}] does not exist.");
-	}
-
-	protected function failure_validate(\Illuminate\Support\MessageBag $messagebag)
-	{
-		$errors = $messagebag->toArray();
-		$messages = [];
-		foreach ($errors as $lines) {
-			foreach ($lines as $message) {
-				$messages[] = trans(Lang::has('validation.failure_post.list') ? 'validation.failure_post.list' : 'core::common.validation.failure_post.list', compact('message'));
-			}
-		}
-		return $this->failure_post(false, ['errors' => $errors, 'messages' => implode($messages)], true);
 	}
 
 }

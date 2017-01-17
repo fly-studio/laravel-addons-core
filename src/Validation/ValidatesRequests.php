@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exception\HttpResponseException;
 use Illuminate\Foundation\Validation\ValidatesRequests as BaseValidatesRequests;
+use Lang;
+
 trait ValidatesRequests
 {
 	use BaseValidatesRequests;
@@ -75,7 +77,7 @@ trait ValidatesRequests
 	 */
 	public function autoValidate(Request $request, $table, $keys = '*', Model $model = null)
 	{
-		if ($request->ajax() || $request->offsetExists('of')) return $this->validateWithApi($request, $table, $keys, $model);
+		if ($request->expectsJson() || $request->offsetExists('of')) return $this->validateWithApi($request, $table, $keys, $model);
 
 		$validator = $this->validating($request, $table, $keys);
 		if ($validator->fails())
@@ -93,7 +95,7 @@ trait ValidatesRequests
 	public function validateWithApi(Request $request, $table, $keys = '*', Model $model = null)
 	{
 		$validator = $this->validating($request, $table, $keys, $model);
-		return $validator->fails() ? $this->failure_validate($validator->errors()) : $this->filterValidatorData($validator, $keys);
+		return $validator->fails() ? $this->throwValidationOutputResponse($validator->errors()) : $this->filterValidatorData($validator, $keys);
 	}
 	/**
 	 * [filterValidatorData description]
@@ -106,5 +108,17 @@ trait ValidatesRequests
 		$data = $validator->getData();
 		$keys != '*' && !is_array($keys) && $keys = explode(',', $keys);
 		return $keys == '*' ? $data : array_only($data, $keys);
+	}
+
+	private function throwValidationOutputResponse(\Illuminate\Support\MessageBag $messagebag)
+	{
+		$errors = $messagebag->toArray();
+		$messages = [];
+		foreach ($errors as $lines) {
+			foreach ($lines as $message) {
+				$messages[] = trans(Lang::has('validation.failure_post.list') ? 'validation.failure_post.list' : 'core::common.validation.failure_post.list', compact('message'));
+			}
+		}
+		return $this->failure_post(false, ['errors' => $errors, 'messages' => implode($messages)], true);
 	}
 }
