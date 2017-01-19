@@ -13,12 +13,24 @@ use Lang, Auth;
 
 class OutputResponse extends Response {
 
+	protected $request = null;
 	protected $data = null;
 	protected $formatter = 'auto';
 	protected $message = null;
 	protected $url = false;
 	protected $result = 'success';
 	protected $outputRaw = false;
+
+	public function setRequest($request)
+	{
+		$this->request = $request;
+		return $this;
+	}
+
+	public function getRequest()
+	{
+		return is_null($this->request) ? app('request') : $this->request;
+	}
 
 	public function setResult($result)
 	{
@@ -41,11 +53,11 @@ class OutputResponse extends Response {
 	{
 		if ($this->formatter == 'auto')
 		{
-			$request = app('request');
+			$request = $this->getRequest();
 			$route = $request->route();
 			$of = $request->input('of', null);
 			if (!in_array($of, ['txt', 'text', 'json', 'xml', 'yaml', 'html']))
-				$of = $request->expectsJson() || in_array('api', $route->gatherMiddleware()) ? 'json' : 'html';
+				$of = $request->expectsJson() || (!empty($route) && in_array('api', $route->gatherMiddleware())) ? 'json' : 'html';
 			return $of;
 		}
 		return $this->formatter;
@@ -108,7 +120,9 @@ class OutputResponse extends Response {
 
 	public function getMessage()
 	{
-		return empty($this->message) ? trans('core::common.default.' . $this->getResult() ) : $this->message;
+		$code = $this->getStatusCode();
+		$message = $code != 200 && Lang::has('exception.http.'.$code) ? trans('exception.http.'.$code) : trans('core::common.default.' . $this->getResult());
+		return empty($this->message) ? $message : $this->message;
 	}
 
 	public function getOutputData()
@@ -144,11 +158,46 @@ class OutputResponse extends Response {
 				$response = $this->setContent($content)->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
 				break;
 			default: //其余全部为json
-				$response = (new JsonResponse($data))->withCallback($callback)->setStatusCode($this->getStatusCode());
+				$jsonResponse = (new JsonResponse($data))->withCallback($callback)->setStatusCode($this->getStatusCode());
+				$response = $this->setContent($jsonResponse->getContent())->withHeaders($jsonResponse->headers->all())->header('Content-Type', 'application/json');
 				break;
 		}
 		return $response;
 	}
+
+    /**
+     * Sends HTTP headers and content.
+     *
+     * @return Response
+     */
+    public function send()
+    {
+    	//404的错误比较特殊，无法找到路由，并且不会执行prepare
+    	$this->prepare($this->getRequest());
+
+    	return parent::send();
+    }
+
+    /**
+     * Returns the Response as an HTTP string.
+     *
+     * The string representation of the Response is the same as the
+     * one that will be sent to the client only if the prepare() method
+     * has been called before.
+     *
+     * @return string The Response as an HTTP string
+     *
+     * @see prepare()
+     */
+    public function __toString()
+    {
+		//404的错误比较特殊，无法找到路由，并且不会执行prepare
+    	$this->prepare($this->getRequest());
+        return
+            sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText)."\r\n".
+            $this->headers."\r\n".
+            $this->getContent();
+    }
 
 	/**
      * Make the place-holder replacements on a line.

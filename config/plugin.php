@@ -73,7 +73,7 @@ return [
 	],
 	//自定义artisan命令
 	//参考 /app/Console/Kernel.php commands
-	'commonds' => [
+	'commands' => [
         //\Plugins\Tools\App\Console\Commands\Inspire::class,
 	],
 	//插件中的模板注入到主模板（确保相同路径）暂只支持smarty
