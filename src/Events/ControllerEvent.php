@@ -33,7 +33,7 @@ class ControllerEvent implements ControllerEventContract
      * @param Illuminate\Routing\Controller $controller
      * @param string $method
      * @param Illuminate\Http\Request $request       default for app('request')
-     * @param Illuminate\Http\Response $response
+     * @param Illuminate\Http\Response|Illuminate\View\View $response
      *
      * @return void
      */

@@ -3,7 +3,7 @@
 namespace Addons\Core\Exceptions;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Http\Exception\HttpResponseException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Addons\Core\Http\OutputResponse;
 use RuntimeException;
 

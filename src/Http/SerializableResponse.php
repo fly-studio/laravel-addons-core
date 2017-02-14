@@ -41,12 +41,12 @@ class SerializableResponse implements \Serializable {
     public function data()
     {
         if (is_scalar($this->response) || $this->response instanceof View)
-             return [ 
-                'content' => strval($this->response),
+            return [ 
+                'content' => null,//strval($this->response),
                 'status' => 200,
                 'headers' => [],
-            ]; 
-        elseif ($this->response instanceof Response)
+            ];
+        else if ($this->response instanceof Response)
             return [
                 'content' => $this->response->content(),
                 'status' => $this->response->status(),

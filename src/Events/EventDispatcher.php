@@ -16,7 +16,7 @@ class EventDispatcher {
 	 */
 	protected $groupStack = [];
 
-	public function execute($prefix, $class, $listener, $priority = 0)
+	public function execute($prefix, $class, $listener)
 	{
 		$attributes = $this->mergeWithLastGroup(compact('class', 'listener', 'prefix', 'priority'));
 
@@ -26,38 +26,37 @@ class EventDispatcher {
 			$class = $namespace.'\\'.$class;
 
 		$class = ltrim($class, '\\');
-		Event::listen($prefix.$class, $listener, $priority);
+		Event::listen($prefix.$class, $listener);
 	}
 
-	public function listen($events, $listener, $priority = 0)
+	public function listen($events, $listener)
 	{
-		Event::listen($events, $listener, $priority);
+		Event::listen($events, $listener);
 	}
 
-	public function model($model, $type, $listener, $priority = 0)
+	public function model($model, $type, $listener)
 	{
-		$this->execute("eloquent.{$type}: ", $model, $listener, $priority);
+		$this->execute("eloquent.{$type}: ", $model, $listener);
 	}
 
-	public function models($models, $listener, $priority = 0)
+	public function models($models, $listener)
 	{
 		foreach ($models as $action => $listener)
 		{
 			list($model, $type) = explode('@', $action, 2) + ['', '*'];
-			$this->model($model, $type, $listener, $priority);
+			$this->model($model, $type, $listener);
 		}
 	}
 
-	public function controller($controller, $listener, $type = 'after', $priority = 0)
+	public function controller($controller, $listener, $type = 'after')
 	{
-		if (strpos($controller, '@') === false && !Str::endsWith($controller, '*')) $controller .= '@*';
-		$this->execute("controller.{$type}: ", $controller, $listener, $priority);
+		$this->execute("controller.{$type}: ", $controller, $listener);
 	}
 
-	public function controllers($controllers, $type = 'after', $priority = 0)
+	public function controllers($controllers, $type = 'after')
 	{
 		foreach ($controllers as $controller => $listener)
-			$this->controller($controller, $listener, $type, $priority);
+			$this->controller($controller, $listener, $type);
 	}
 
 	public function group($attributes, Closure $callback)

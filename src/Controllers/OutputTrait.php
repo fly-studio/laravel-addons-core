@@ -2,7 +2,6 @@
 namespace Addons\Core\Controllers;
 
 use BadMethodCallException;
-//use Illuminate\Http\Exception\HttpResponseException;
 use Addons\Core\Exceptions\OutputResponseException;
 use Addons\Core\Http\OutputResponse;
 use Addons\Core\Http\ApiResponse;

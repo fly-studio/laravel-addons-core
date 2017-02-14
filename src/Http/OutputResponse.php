@@ -1,14 +1,14 @@
 <?php
 namespace Addons\Core\Http;
 
-use Symfony\Component\HttpFoundation\Request;
-use Addons\Core\Tools\Output;
-use Illuminate\Http\Response;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
-use Illuminate\Http\JsonResponse;
 use Addons\Core\File\Mimes;
+use Illuminate\Http\Response;
+use Addons\Core\Tools\Output;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
+use Symfony\Component\HttpFoundation\Request;
 use Lang, Auth;
 
 class OutputResponse extends Response {

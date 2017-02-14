@@ -12,13 +12,13 @@ class Controller extends BaseController {
 	public function callAction($method, $parameters)
 	{
 		//event before
-		event('controller.before: '.get_class($this).'@'.$method, new ControllerEvent($this, $method));
+		event('controller.before: '.get_class($this).'@'.$method, [new ControllerEvent($this, $method)]);
 		// check current user's permissions
 		if ($this->addons) $this->checkPermission($method);
 		
 		$response = call_user_func_array([$this, $method], $parameters);
 		//event successful
-		event('controller.after: '.get_class($this).'@'.$method, new ControllerEvent($this, $method, null, $response));
+		event('controller.after: '.get_class($this).'@'.$method, [new ControllerEvent($this, $method, null, $response)]);
 		return $response;
 	}
 

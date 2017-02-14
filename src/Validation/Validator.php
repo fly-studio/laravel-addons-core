@@ -1,8 +1,10 @@
 <?php
 namespace Addons\Core\Validation;
  
-use Illuminate\Validation\Validator as BaseValidator;
+use BadMethodCallException;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationRuleParser;
+use Illuminate\Validation\Validator as BaseValidator;
 /**
  * 本Class主要是处理宽字符的长度、Fields检索等
  * 
@@ -113,7 +115,7 @@ class Validator extends BaseValidator {
 		{
 			foreach ($_list as $rule)
 			{
-				list($rule, $parameters) = $this->parseRule($rule);
+				list($rule, $parameters) = ValidationRuleParser::parse($rule);
 				$rules[$attribute][$rule] = empty($parameters) ? true : (count($parameters) == 1 ? $parameters[0] : $parameters); 
 			}
 		}

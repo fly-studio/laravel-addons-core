@@ -157,8 +157,7 @@ trait ApiTrait {
 		$paginate = $builder->paginate($size, $columns, 'page', $page);
 
 		$query_strings = array_merge_recursive(['f' => $filters, 'q' => $queries], $extra_query);
-		foreach ($query_strings as $k => $v)
-			$paginate->addQuery($k, $v);
+		$paginate->appends($query_strings);
 
 		$paginate->filters = $filters;
 		$paginate->queries = $queries;

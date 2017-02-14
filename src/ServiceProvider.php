@@ -2,7 +2,6 @@
 namespace Addons\Core;
 
 use Illuminate\Support\Str;
-use Addons\Core\Http\UrlGenerator;
 use Symfony\Component\Finder\Finder;
 use Addons\Core\Validation\Validator;
 use Addons\Core\Http\ResponseFactory;
@@ -30,7 +29,7 @@ class ServiceProvider extends BaseServiceProvider
 		});*/
 		//replace class
 		$this->app->bind('Illuminate\Contracts\Routing\ResponseFactory', ResponseFactory::class);
-		$this->app->bind('Illuminate\Contracts\Routing\UrlGenerator', UrlGenerator::class);
+		//$this->app->bind('Illuminate\Contracts\Routing\UrlGenerator', UrlGenerator::class);
 
 		$this->mergeConfigFrom(__DIR__ . '/../config/mimes.php', 'mimes');
 		//$this->mergeConfigFrom(__DIR__ . '/../config/socketlog.php', 'socketlog');

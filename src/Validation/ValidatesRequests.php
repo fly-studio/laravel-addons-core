@@ -5,7 +5,6 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exception\HttpResponseException;
 use Illuminate\Foundation\Validation\ValidatesRequests as BaseValidatesRequests;
 use Lang;
 
