@@ -32,8 +32,8 @@ class ServiceProvider extends BaseServiceProvider
 		//$this->app->bind('Illuminate\Contracts\Routing\UrlGenerator', UrlGenerator::class);
 
 		$this->mergeConfigFrom(__DIR__ . '/../config/mimes.php', 'mimes');
-		//$this->mergeConfigFrom(__DIR__ . '/../config/socketlog.php', 'socketlog');
 		$this->mergeConfigFrom(__DIR__ . '/../config/plugin.php', 'plugin');
+		$this->mergeConfigFrom(__DIR__ . '/../config/output.php', 'output');
 
 		$this->registerPlugins();
 	}

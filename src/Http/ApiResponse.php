@@ -56,7 +56,7 @@ class ApiResponse extends OutputResponse {
 
 	public function getOutputData()
 	{
-		return ['encrypted' => $this->getEncrypted() ? ($this->getEncryptedKey() ?: true) : false]  + array_except(parent::getOutputData(), ['url', 'message']);
+		return ['encrypted' => $this->getEncrypted() ? ($this->getEncryptedKey() ?: true) : false]  + array_except(parent::getOutputData(), ['tipType', 'message']);
 	}
 
 }

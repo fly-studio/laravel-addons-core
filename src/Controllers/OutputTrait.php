@@ -6,7 +6,9 @@ use Addons\Core\Exceptions\OutputResponseException;
 use Addons\Core\Http\OutputResponse;
 use Addons\Core\Http\ApiResponse;
 use Addons\Core\Http\OfficeResponse;
+use Addons\Core\Http\Output\TipTypeManager;
 use Auth, Lang;
+
 trait OutputTrait {
 
 	protected $viewData = [];
@@ -81,7 +83,7 @@ trait OutputTrait {
 				list($message_name, $url, $data, $showData) = $parameters + ($type == 'success' ? [null, true, [], true] : [null, false, [], false]);
 
 				$response = new OutputResponse();
-				$response->setResult($type)->setMessage($message_name, $data)->setUrl($url);
+				$response->setResult($type)->setMessage($message_name, $data)->setTipType(app(TipTypeManager::class)->autoDriver($url));
 				if ($showData) $response->setData($data);
 
 				if ($type != 'success')

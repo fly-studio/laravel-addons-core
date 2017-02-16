@@ -8,7 +8,9 @@ use Illuminate\Http\Response;
 use Addons\Core\Tools\Output;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Addons\Core\Http\Output\TipTypeManager;
 use Symfony\Component\HttpFoundation\Request;
+use Addons\Core\Contracts\Http\Output\TipType;
 use Lang, Auth;
 
 class OutputResponse extends Response {
@@ -17,7 +19,7 @@ class OutputResponse extends Response {
 	protected $data = null;
 	protected $formatter = 'auto';
 	protected $message = null;
-	protected $url = false;
+	protected $tipType = null;
 	protected $result = 'success';
 	protected $outputRaw = false;
 
@@ -63,15 +65,15 @@ class OutputResponse extends Response {
 		return $this->formatter;
 	}
 
-	public function setUrl($url)
+	public function setTipType(TipType $tipType)
 	{
-		$this->url = is_string($url) ? url($url) : $url;
+		$this->tipType = $tipType;
 		return $this;
 	}
 
-	public function getUrl()
+	public function getTipType()
 	{
-		return $this->url;
+		return is_null($this->tipType) ? app(TipTypeManager::class)->driver() : $this->tipType;
 	}
 
 	public function setData($data, $outputRaw = false)
@@ -133,7 +135,7 @@ class OutputResponse extends Response {
 			'uid' => Auth::check() ? Auth::user()->getKey() : null,
 			'debug' => config('app.debug'),
 			'message' => $this->getMessage(),
-			'url' => $this->getUrl(),
+			'tipType' => $this->getTipType(),
 			'data' => $this->getData(),
 			'time' => time(),
 			'duration' => microtime(true) - LARAVEL_START,
