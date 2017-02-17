@@ -4,7 +4,7 @@ namespace Addons\Core\Http\Output\TipTypes;
 
 use Addons\Core\Contracts\Http\Output\TipType;
 
-class RefreshType extends TipType {
+class RedirectType extends TipType {
 
 	protected $type = 'redirect';
 	protected $url = null;

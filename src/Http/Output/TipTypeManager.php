@@ -3,6 +3,7 @@
 namespace Addons\Core\Http\Output;
 
 use Illuminate\Support\Manager;
+use Addons\Core\Contracts\Http\Output\TipType;
 use Illuminate\Contracts\Foundation\Application;
 
 class TipTypeManager extends Manager {
@@ -20,15 +21,14 @@ class TipTypeManager extends Manager {
 
     public function autoDriver($original)
     {
-        switch ($original) {
-            case true:
-                return $this->driver('refresh');
-            case false:
-                return $this->driver('back');
-            default:
-                return $this->driver('redirect')->setUrl($original);
-                break;
-        }
+        if ($original instanceof TipType)
+            return $original;
+        elseif ($original === true)
+            return $this->driver('refresh');
+        elseif ($original === false)
+            return $this->driver('back');
+        else
+            return $this->driver('redirect')->setUrl($original);                
     }
 
     /**
