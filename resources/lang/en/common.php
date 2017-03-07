@@ -14,65 +14,89 @@ return [
 
 	'default' => [
 		'success' => [
-			'title' => 'Done!',
-			'content' => 'all Done,enjoy it!',
+			'title' => 'Done',
+			'content' => 'All success.',
 		],
 		'error' => [
-			'title' => 'Error!',
-			'content' => 'something errors.retry,please!',
+			'title' => 'Error',
+			'content' => 'Something error(maybe server error), please retry.',
 		],
 		'failure' => [
-			'title' => 'Failure!',
-			'content' => 'something mistakes.retry,please!',
+			'title' => 'Failure',
+			'content' => 'Something failure, please retry.',
 		],
-		'success_login' => [
-			'title' => 'Login successful!',
-			'content' => 'logon,back to the referrer!',
+		'warning' => [
+			'title' => 'Warning',
+			'content' => 'Warning, some operation were danger.',
 		],
+		'notice' => [
+			'title' => 'Notice',
+			'content' => 'Please read the tip seriously.',
+		],
+	],
+	'server' => [
 		'error_param' => [
-			'title' => 'Paramters Error!',
-			'content' => 'please visit the website with broswer!',
+			'title' => 'Parameter Error',
+			'content' => 'Your URL\'s parameters were lost or invalid.',
 		],
 		'error_referrer' => [
-			'title' => 'Referrer Error!',
-			'content' => 'your referrer:[:referrer] is not allow!',
+			'title' => 'Referrer Error',
+			'content' => 'Your referrer [:referrer] is forbidden.',
 		],
 		'error_server' => [
-			'title' => 'Server Error!',
-			'content' => 'server error,please retry later!',
+			'title' => 'Server Error',
+			'content' => 'Server Error, please retry later.',
 		],
 		'error_database' => [
-			'title' => 'Database Error!',
-			'content' => 'database error,please retry later！',
+			'title' => 'Database Error',
+			'content' => 'Database error, please retry later.',
 		],
-		'failure_validate' => [
-			'title' => 'POST Failure!',
+	],
+	'validation' => [
+		'post_fields_invalid' => [
+			'title' => 'Post Failure',
 			'content' => '<ul class="post_faiure">:messages</ul>',
 			'list' => '<li>:message</li>'.PHP_EOL,
 		],
-		'failure_auth' => [
-			'title' => 'Permission Failure',
-			'content' => 'permission failure,<a href="'.url('auth').'" target="_self">Click it</a> to change the user!',
+		'csrf_invalid' => [
+			'title' => 'CSRF Invalid',
+			'content' => 'maybe you stay too long, please save your data.(copy the `content` to other tool, eg. notepad), then refresh this page, and retry.',
+		],
+	],
+	'auth' => [
+		'success_login' => [
+			'title' => 'Login Success',
+			'content' => 'Login success, redirect to the page that you last visited.',
+		],
+		'success_logout' => [
+			'title' => 'Logout Success',
+			'content' => 'Logout success, redirect to the page that you last visited',
+		],
+		'permission_forbidden' => [
+			'title' => 'Permission Forbidden',
+			'content' => 'You have no permission to visit this page，if you wanna switch a super user, <a href="'.url('auth').'" target="_self">Click here</a>.',
 		],
 		'failure_login' => [
-			'title' => 'Login Failure!',
-			'content' => 'username or password is invail!',
+			'title' => 'Login Failure',
+			'content' => 'Username or Password is invalid.',
 		],
-		'failure_unlogin' => [
-			'title' => 'No Logon',
-			'content' => 'you are not logon,<a href="'.url('auth').'" target="_self">Click it</a> to login!',
+		'unlogin' => [
+			'title' => 'No Login',
+			'content' => 'No login, if you wanna login, <a href="'.url('auth').'" target="_self">Click here</a>.',
 		],
-		'failure_edit_other' => [
-			'title' => '修改越权',
-			'content' => '您要修改的资料不属于您，请勿越权！',
+	],
+	'document' => [
+		'not_exists' => [
+			'title' => 'No Document Exists',
+			'content' => 'the document that your visited is not exists.',
 		],
-		'failure_view_other' => [
-			'title' => '查看越权',
-			'content' => '您无法查看别人的资料！',
+		'owner_deny' => [
+			'title' => 'Cross-User Failure',
+			'content' => 'You can not edit or view others document.',
 		],
-		'failure_noexist' => [
-			'title' => '资料不存在',
-			'content' => '您要查找的资料不存在！',
+		'model_not_exists' => [
+			'title' => 'No Record Exists ',
+			'content' => 'The database [:model] have no data from ID [:id] <br /> :file line :line！',
 		],
 	],
 ];

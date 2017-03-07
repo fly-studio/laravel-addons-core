@@ -115,7 +115,7 @@ trait ValidatesRequests
 		$messages = [];
 		foreach ($errors as $lines) {
 			foreach ($lines as $message) {
-				$messages[] = trans(Lang::has('validation.failure_post.list') ? 'validation.failure_post.list' : 'core::common.validation.failure_post.list', compact('message'));
+				$messages[] = trans(Lang::has('validation.post_fields_invalid.list') ? 'validation.post_fields_invalid.list' : 'core::common.validation.post_fields_invalid.list', compact('message'));
 			}
 		}
 		return $this->failure_post(false, ['errors' => $errors, 'messages' => implode($messages)], true);

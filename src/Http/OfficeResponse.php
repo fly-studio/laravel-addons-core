@@ -1,13 +1,15 @@
 <?php
 namespace Addons\Core\Http;
 
+use Addons\Core\File\Mimes;
+use Addons\Core\Tools\Office;
 use Addons\Core\Http\OutputResponse;
 use Addons\Core\Tools\OutputEncrypt;
-use Addons\Core\Tools\Office;
+use Symfony\Component\HttpFoundation\Request;
 
 class OfficeResponse extends OutputResponse {
 
-	protected $type = 'export';
+	protected $type = 'office';
 
 	public function getFormatter()
 	{

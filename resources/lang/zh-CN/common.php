@@ -53,12 +53,12 @@ return [
 		],
 	],
 	'validation' => [
-		'failure_post' => [
+		'post_fields_invalid' => [
 			'title' => '提交资料失败',
 			'content' => '<ul class="post_faiure">:messages</ul>',
 			'list' => '<li>:message</li>'.PHP_EOL,
 		],
-		'failure_csrf' => [
+		'csrf_invalid' => [
 			'title' => 'CSRF检测无法通过',
 			'content' => '您可能停留页面时间过长，请使用其它方式保存关键数据后，刷新当前页面后再重试！',
 		],
@@ -72,7 +72,7 @@ return [
 			'title' => '登出成功',
 			'content' => '即将跳转到刚才的页面！',
 		],
-		'failure_permission' => [
+		'permission_forbidden' => [
 			'title' => '权限不够',
 			'content' => '您的权限不够，无法执行该操作，或无法访问本页面，切换用户请<a href="'.url('auth').'" target="_self">点击这里</a>！',
 		],
@@ -80,21 +80,21 @@ return [
 			'title' => '登录失败',
 			'content' => '账号或密码错误！',
 		],
-		'failure_unlogin' => [
+		'unlogin' => [
 			'title' => '您尚未登录',
 			'content' => '您尚未登录，无法访问本页面，登录请<a href="'.url('auth').'" target="_self">点击这里</a>！',
 		],
 	],
 	'document' => [
-		'failure_noexist' => [
+		'not_exists' => [
 			'title' => '资料不存在',
 			'content' => '您要查找的资料不存在！',
 		],
-		'failure_owner' => [
+		'owner_deny' => [
 			'title' => '越权',
 			'content' => '您无法查看或修改他人的资料！',
 		],
-		'failure_model_noexist' => [
+		'model_not_exists' => [
 			'title' => '数据不存在',
 			'content' => '无法在数据库[:model]中查询到数据[:id] <br /> :file line :line！',
 		],

@@ -26,6 +26,12 @@ class OutputResponseException extends HttpResponseException{
 		return $this;
 	}
 
+	public function setStatusCode($code)
+	{
+		$this->response->setStatusCode($code);
+		return $this;
+	}
+
 	public function setFormatter($formatter)
 	{
 		$this->response->setFormatter($formatter);

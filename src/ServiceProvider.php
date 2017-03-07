@@ -139,11 +139,12 @@ class ServiceProvider extends BaseServiceProvider
 						require $config['path'].'routes/'.$key.'.php';
 					});
 				}
-			!empty($config['commands']) && $this->commands($config['commands']);
-
-			if (!empty($config['register']['console']))
-				require $config['path'].'routes/console.php';
-
+			if ($this->app->runningInConsole())
+			{
+				!empty($config['commands']) && $this->commands($config['commands']);
+				if (!empty($config['register']['console']))
+					require $config['path'].'routes/console.php';
+			}
 			if (!empty($config['register']['event']))
 				app(EventDispatcher::class)->group(['namespace' => $config['namespace'].'\App'], function($eventer) use($config) {
 					require $config['path'].'routes/event.php';

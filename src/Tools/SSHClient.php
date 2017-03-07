@@ -10,7 +10,7 @@ namespace Addons\Core\Tools;
  * @copyright  (c) 2011 Jexmex
  * @license    MIT
  */
-class SSH
+class SSHClient
 {
 	/**/
 	protected $_connected = FALSE;
@@ -81,7 +81,7 @@ class SSH
 		//If host connection fails, throw exception
 		if(!$link)
 		{
-			throw new Kohana_Exception('Unable to connect to :host on port :port', array(':host' => $host, ':port' => $port));
+			throw new \Exception('Unable to connect to '.$host.' on port '.$port);
 		}
 		else
 		{
@@ -96,7 +96,7 @@ class SSH
 				//If the fingerprint is not verified, throw exception
 				if(!$verify)
 				{
-					throw new Kohana_Exception('Unable to verify host fingerprint');
+					throw new \Exception('Unable to verify host fingerprint');
 				}
 			}
 		}
@@ -220,7 +220,7 @@ class SSH
 		$local_filepath = $this->format_path($local_filepath);
 		$remote_filepath = $this->format_path($remote_filepath);
 
-		return ssh2_scp_receive($this->_conn_link, $remote_filepath, $local_filepath);
+		return ssh2_scp_recv($this->_conn_link, $remote_filepath, $local_filepath);
 	}
 
 	public function rename($from, $to)
@@ -326,7 +326,7 @@ class SSH
 			);
 			
 			if (!array_key_exists($name, $list)) 
-				throw new Kohana_Exception('"allow_url_fopen" is off!');
+				throw new \Exception('"allow_url_fopen" is off!');
 
 			$data = @ssh2_sftp_stat($arguments[0]);
 			$data['file_exists'] = $data !== FALSE;
@@ -368,7 +368,7 @@ class SSH
 		);
 
 		if (!in_array($name, $list))
-			throw new Kohana_Exception('Call to undefined function: :class:::function()', array(':class' => __CLASS__, ':function' => $name));
+			throw new \Exception('Call to undefined function: '.__CLASS__.'::'.$name.'()');
 		//将路径变为SFTP路径
 		$arguments[0] = $this->format_sftp_path($arguments[0]);
 		return call_user_func_array($name, $arguments);

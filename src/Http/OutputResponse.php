@@ -65,6 +65,11 @@ class OutputResponse extends Response {
 		return $this->formatter;
 	}
 
+	public function setAutoTip($tip)
+	{
+		return $this->setTipType(app(TipTypeManager::class)->autoDriver($tip));
+	}
+
 	public function setTipType(TipType $tipType)
 	{
 		$this->tipType = $tipType;
@@ -73,7 +78,21 @@ class OutputResponse extends Response {
 
 	public function getTipType()
 	{
-		return is_null($this->tipType) ? app(TipTypeManager::class)->driver() : $this->tipType;
+		//default tipType
+		if (is_null($this->tipType))
+		{
+			switch ($this->getResult()) {
+				case 'success':
+					return app(TipTypeManager::class)->autoDriver(true);
+				case 'failure':
+				case 'error':
+					return app(TipTypeManager::class)->autoDriver(false);
+				case 'api':
+				default:
+					return app(TipTypeManager::class)->driver();
+			}
+		}
+		return $this->tipType;
 	}
 
 	public function setData($data, $outputRaw = false)
@@ -97,7 +116,14 @@ class OutputResponse extends Response {
 			$this->message = null;
 			return $this;
 		}
-		$message = is_array($message_name) ? $message_name : trans($message_name);
+		if (is_array($message_name))
+			$message = $message_name;
+		else if (Lang::has($message_name))
+			$message = trans($message_name);
+		else if (Lang::has('core::common.'.$message_name))
+			$message = trans('core::common.'.$message_name);
+		else
+			$message = $message_name;
 
 		if (!empty($transData))
 		{

@@ -119,22 +119,28 @@ class Router extends BaseRouter {
 		$parameters = $function->getParameters(); //ReflectionParameter 
 		
 		$_data = array();
-		$count = count($parameters);
 		$request = app('request');
-		for ($i=0; $i < $count; $i++)
+		for ($i = 0; $i < count($parameters); $i++)
 		{ 
 			$key = $parameters[$i]->getName();
-			if ( array_key_exists($key, $route_parameters) )
+			if ( array_key_exists($i, $route_parameters) )
+			{
+				$_data[] = $route_parameters[$i];
+			}
+			else if ( array_key_exists($key, $route_parameters) )
 			{
 				$_data[] = $route_parameters[$key];
 			}
 			else if ($parameters[$i]->getClass()) //just in $route_parameters;
 			{
 				$_data[] = app($parameters[$i]->getClass()->name);
-			} else { //from $_GET
+			}
+			else //from $_GET
+			{ 
 				$default = $parameters[$i]->isDefaultValueAvailable() ? $parameters[$i]->getDefaultValue() : NULL;
 				$_data[] = array_key_exists($key, $_GET) ? $request->input($key) : $default;
 			}
+
 		}
 		$obj = app()->make($className);
 		// Execute the action itself
