@@ -21,7 +21,11 @@ return [
 		//- 读取目录 /tools/resources/views/
 		//- Controller中这样调用：view('tools:system.xxx'); 对应/tools/resources/views/system/xxx.tpl
 		//- smarty模板中这样调用：<{include file="[tools]system/nav.inc.tpl"}>
-		'view' => false, 
+		'view' => false,
+		//是否注册表单验证
+		//- 读取目录 /tools/resources/censors/
+		//- Controller中这样调用：censor('tools:member.store', ['username', 'password', 'nickname'])->data($request->all())->validator(); 对应/tools/resources/censors/zh-CN/member.php
+		'censor' => false, 
 		//是否注册/tools/resources/lang到语言包
 		//- Controller中这样调用：trans('tools:valition.alpha_dash');
 		//- smarty模板中这样调用：<{'tools:valition.alpha_dash'|trans}>
@@ -34,10 +38,6 @@ return [
 		//- 目前有web, api 两种路由模式
 		//- 自动加载/tools/routes/web.php,api.php中的路由
 		'router' => false,
-		//是否将/tools/config/validation.php合并到主配置config/validation.php
-		//- 示例可以查看tools/config/validation.php
-		//- 注意：相同键名会被覆盖
-		'validation' => false,
 		//是否加载Command合集
 		//- 自动加载/tools/routes/console.php
 		//- 具体请查看主程序下的 routes/console.php
