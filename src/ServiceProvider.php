@@ -115,7 +115,7 @@ class ServiceProvider extends BaseServiceProvider
 	private function bootPlugins()
 	{
 		$router = $this->app['router'];
-		$ruler = $this->app['ruler'];
+		$censor = $this->app['censor'];
 		$plugins = config('plugins');
 		if (empty($plugins)) return;
 		foreach($plugins as $name => $config)
@@ -126,7 +126,7 @@ class ServiceProvider extends BaseServiceProvider
 				$this->publishes([$config['path'].'config/'.$file.'.php' => config_path($file.'.php')], 'config');
 
 			!empty($config['register']['view']) && $this->loadViewsFrom(realpath($config['path'].'resources/views/'), $name);
-			!empty($config['register']['censor']) && $ruler->addNamespace($name, realpath($config['path'].'resources/censors/'));
+			!empty($config['register']['censor']) && $censor->addNamespace($name, realpath($config['path'].'resources/censors/'));
 			!empty($config['register']['translator']) && $this->loadTranslationsFrom(realpath($config['path'].'resources/lang/'), $name);
 			if (!empty($config['register']['migrate']) && $this->app->runningInConsole())
 				$this->loadMigrationsFrom(realpath($config['path'].'database/migrations'));
