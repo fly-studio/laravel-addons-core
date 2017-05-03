@@ -37,6 +37,7 @@ trait CacheTrait{
 
 	public static function findByCache($id)
 	{
+		if (!is_numeric($id)) return static::find($id);
 		$model = new static();
 		$keyName = $model->getKeyName();
 		$min = floor($id / 1000); $max = $min + 1;
