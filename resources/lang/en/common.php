@@ -53,11 +53,6 @@ return [
 		],
 	],
 	'validation' => [
-		'post_fields_invalid' => [
-			'title' => 'Post Failure',
-			'content' => '<ul class="post_faiure">:messages</ul>',
-			'list' => '<li>:message</li>'.PHP_EOL,
-		],
 		'csrf_invalid' => [
 			'title' => 'CSRF Invalid',
 			'content' => 'maybe you stay too long, please save your data.(copy the `content` to other tool, eg. notepad), then refresh this page, and retry.',

@@ -1,5 +1,5 @@
 <?php
-namespace Addons\Core\Http;
+namespace Addons\Core\Http\Response;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\File\File;

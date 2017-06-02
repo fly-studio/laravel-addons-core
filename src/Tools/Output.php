@@ -1,7 +1,7 @@
 <?php
 namespace Addons\Core\Tools;
 
-use Addons\Core\Spyc;
+use Addons\Func\Tools\Spyc;
 
 class Output {
 
@@ -23,6 +23,7 @@ class Output {
 
 	public static function xml($data)
 	{
+		$data = json_decode(json_encode($data), true);
 		return xml_encode($data);
 	}
 

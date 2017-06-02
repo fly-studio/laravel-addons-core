@@ -1,10 +1,10 @@
 <?php
-namespace Addons\Core\Http;
+namespace Addons\Core\Http\Response;
 
-use Addons\Core\Http\OutputResponse;
 use Addons\Core\Tools\OutputEncrypt;
+use Addons\Core\Http\Response\TextResponse;
 
-class ApiResponse extends OutputResponse {
+class ApiResponse extends TextResponse {
 
 	protected $result = 'api';
 	private $encrypted = false;

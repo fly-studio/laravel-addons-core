@@ -53,11 +53,6 @@ return [
 		],
 	],
 	'validation' => [
-		'post_fields_invalid' => [
-			'title' => '提交资料失败',
-			'content' => '<ul class="post_faiure">:messages</ul>',
-			'list' => '<li>:message</li>'.PHP_EOL,
-		],
 		'csrf_invalid' => [
 			'title' => 'CSRF检测无法通过',
 			'content' => '您可能停留页面时间过长，请使用其它方式保存关键数据后，刷新当前页面后再重试！',

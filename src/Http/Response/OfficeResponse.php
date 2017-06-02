@@ -1,13 +1,12 @@
 <?php
-namespace Addons\Core\Http;
+namespace Addons\Core\Http\Response;
 
 use Addons\Core\File\Mimes;
 use Addons\Core\Tools\Office;
-use Addons\Core\Http\OutputResponse;
-use Addons\Core\Tools\OutputEncrypt;
+use Addons\Core\Http\Response\TextResponse;
 use Symfony\Component\HttpFoundation\Request;
 
-class OfficeResponse extends OutputResponse {
+class OfficeResponse extends TextResponse {
 
 	protected $type = 'office';
 

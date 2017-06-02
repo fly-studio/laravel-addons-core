@@ -2,22 +2,23 @@
 
 namespace Addons\Core\Exceptions;
 
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Addons\Core\Http\OutputResponse;
 use RuntimeException;
+use Addons\Core\Http\Response\TextResponse;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OutputResponseException extends HttpResponseException{
 
 	public function __construct($message_name = null, $result = 'failure')
 	{
-		if ($message_name instanceof OutputResponse) {
+
+		if ($message_name instanceof TextResponse) {
 			$this->response = $message_name;
 		} else {
-			$this->response = new OutputResponse;
+			$this->response = new TextResponse;
 			!empty($message_name) && $this->setMessage($message_name);
+			$this->setResult($result);
 		}
-		$this->setResult($result);
 	}
 
 	public function setResult($result)

@@ -66,7 +66,6 @@ class ServiceProvider extends BaseServiceProvider
 			config()->set('smarty.template_path', (array)config('smarty.template_path', []) + [$name => $path.'resources/views']);
 
 			//read config
-			!empty($config['register']['validation']) && $this->mergeConfigFrom($config['path'].'config/validation.php', 'validation');
 			foreach ($config['config'] as $file)
 				$this->mergeConfigFrom($config['path'].'config/'.$file.'.php', $file);
 

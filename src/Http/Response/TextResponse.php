@@ -1,6 +1,7 @@
 <?php
-namespace Addons\Core\Http;
+namespace Addons\Core\Http\Response;
 
+use Lang, Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use Addons\Core\File\Mimes;
@@ -11,9 +12,8 @@ use Illuminate\Support\Collection;
 use Addons\Core\Http\Output\TipTypeManager;
 use Symfony\Component\HttpFoundation\Request;
 use Addons\Core\Contracts\Http\Output\TipType;
-use Lang, Auth;
 
-class OutputResponse extends Response {
+class TextResponse extends Response {
 
 	protected $request = null;
 	protected $data = null;
@@ -86,6 +86,8 @@ class OutputResponse extends Response {
 					return app(TipTypeManager::class)->autoDriver(true);
 				case 'failure':
 				case 'error':
+				case 'notice':
+				case 'warning':
 					return app(TipTypeManager::class)->autoDriver(false);
 				case 'api':
 				default:
@@ -120,14 +122,13 @@ class OutputResponse extends Response {
 			$message = $message_name;
 		else if (Lang::has($message_name))
 			$message = trans($message_name);
-		else if (Lang::has('core::common.'.$message_name))
+		else if (strpos($message_name, '::') === false && Lang::has('core::common.'.$message_name))
 			$message = trans('core::common.'.$message_name);
 		else
 			$message = $message_name;
 
 		if (!empty($transData))
 		{
-			$translator = app('translator');
 			if (is_array($message))
 			{
 				foreach ($message as &$v)

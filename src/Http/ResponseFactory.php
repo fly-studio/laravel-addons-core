@@ -1,10 +1,11 @@
 <?php
 namespace Addons\Core\Http;
 
-use Illuminate\Routing\ResponseFactory as FactoryContract;
 use Illuminate\Support\Str;
 use Illuminate\Http\Response;
-use Addons\Core\Http\BinaryFileResponse;
+use Addons\Core\Http\Response\BinaryFileResponse;
+use Illuminate\Routing\ResponseFactory as FactoryContract;
+
 class ResponseFactory extends FactoryContract {
 
 

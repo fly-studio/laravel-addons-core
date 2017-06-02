@@ -1,9 +1,9 @@
 <?php
 namespace Addons\Core\Controllers;
 
+use Addons\Core\Events\ControllerEvent;
 use Addons\Core\Controllers\OutputTrait;
 use Addons\Core\Controllers\PermissionTrait;
-use Addons\Core\Events\ControllerEvent;
 use Illuminate\Routing\Controller as BaseController;
 
 class Controller extends BaseController {

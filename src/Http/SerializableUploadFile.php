@@ -1,7 +1,9 @@
 <?php
 namespace Addons\Core\Http;
+
 //use Illuminate\Http\UploadedFile;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
+
 class SerializableUploadFile implements \Serializable {
 
 	private $file;

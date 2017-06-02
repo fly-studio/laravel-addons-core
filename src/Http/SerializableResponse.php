@@ -1,7 +1,8 @@
 <?php
 namespace Addons\Core\Http;
-use Illuminate\Http\Response;
+
 use Illuminate\View\View;
+use Illuminate\Http\Response;
 
 class SerializableResponse implements \Serializable {
 
