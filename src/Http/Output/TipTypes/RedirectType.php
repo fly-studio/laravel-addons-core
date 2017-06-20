@@ -22,11 +22,22 @@ class RedirectType extends TipType {
 
 	public function jsonSerialize()
 	{
-		return [
+		return $this->toArray();
+	}
+
+	/**
+     * Convert the model instance to an array.
+     *
+     * @return array
+     */
+    public function toArray()
+    {
+        return [
 			'type' => $this->type,
 			'url' => $this->getUrl(),
 			'timeout' => $this->getTimeout(),
 		];
-	}
+    }
+
 
 }

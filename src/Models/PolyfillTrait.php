@@ -75,7 +75,7 @@ trait PolyfillTrait{
 		$data = parent::attributesToArray();
 		foreach ($this->getCasts() as $key => $type)
 		{
-			if (!empty($type) && !in_array($type, $this->originalCastTypes))
+			if (!empty($type) && !in_array($type, $this->originalCastTypes) && isset($data[$type]))
 			{
 				$method = Str::camel($type).'ToArray';
 				if (method_exists($this, $method))

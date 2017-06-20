@@ -13,9 +13,14 @@ class NullType extends TipType {
 		return $this->timeout;
 	}
 
-	public function jsonSerialize()
+	public function toArray()
 	{
 		return false;
+	}
+
+	public function jsonSerialize()
+	{
+		return $this->toArray();
 	}
 
 }

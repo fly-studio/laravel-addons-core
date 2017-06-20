@@ -10,6 +10,11 @@ class RefreshType extends TipType {
 
 	public function jsonSerialize()
 	{
+		return $this->toArray();
+	}
+
+	public function toArray()
+	{
 		return [
 			'type' => $this->type,
 			'timeout' => $this->getTimeout(),
