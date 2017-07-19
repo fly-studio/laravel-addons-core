@@ -1,14 +1,15 @@
 <?php
-namespace Addons\Core\Controllers;
+namespace Addons\Core;
 
 use Closure, Schema, DB;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Arr;
+
 trait ApiTrait {
 
-	private function _getColumns(Builder $builder)
+	public function _getColumns(Builder $builder)
 	{
 		static $table_columns;
 		
@@ -102,7 +103,7 @@ trait ApiTrait {
 	 * @param  Builder $builder 
 	 * @return array           返回参数列表
 	 */
-	private function _getFilters(Request $request)
+	public function _getFilters(Request $request)
 	{
 		$filters = [];
 		$inputs = $request->input('f', []);
@@ -120,7 +121,7 @@ trait ApiTrait {
 	 * @param  Builder $builder 
 	 * @return array           返回参数列表
 	 */
-	private function _getQueries(Request $request)
+	public function _getQueries(Request $request)
 	{
 		$inputs = $request->input('q', []);
 
@@ -136,14 +137,14 @@ trait ApiTrait {
 	 * @param  Builder $builder 
 	 * @return array           返回参数列表
 	 */
-	private function _getOrders(Request $request, Builder $builder)
+	public function _getOrders(Request $request, Builder $builder)
 	{
 		$orders = $request->input('o', []);
 		//默认按照主键的倒序
 		return empty($orders) ? [$builder->getModel()->getKeyName() => 'desc'] : $orders;
 	}
 
-	private function _getPaginate(Request $request, Builder $builder, array $columns = ['*'], array $extra_query = [])
+	public function _getPaginate(Request $request, Builder $builder, array $columns = ['*'], array $extra_query = [])
 	{
 		$size = $request->input('size') ?: config('size.models.'.$builder->getModel()->getTable(), config('size.common'));
 		$page = $request->input('page', 1);
@@ -165,7 +166,7 @@ trait ApiTrait {
 		return $paginate;
 	}
 
-	private function _getData(Request $request, Builder $builder, Closure $callback = NULL, array $columns = ['*'])
+	public function _getData(Request $request, Builder $builder, Closure $callback = NULL, array $columns = ['*'])
 	{
 		$paginate = $this->_getPaginate($request, $builder, $columns);
 
@@ -175,7 +176,7 @@ trait ApiTrait {
 		return $paginate->toArray() + ['filters' => $paginate->filters, 'queries' => $paginate->queries, 'orders' => $paginate->orders];
 	}
 
-	private function _getCount(Request $request, Builder $builder, $enable_filters = TRUE)
+	public function _getCount(Request $request, Builder $builder, $enable_filters = TRUE)
 	{
 		$_b = clone $builder;
 		if ($enable_filters)
@@ -194,7 +195,7 @@ trait ApiTrait {
 			return $_b->count();
 	}
 
-	private function _getExport(Request $request, Builder $builder, Closure $callback = NULL, array $columns = ['*']) {
+	public function _getExport(Request $request, Builder $builder, Closure $callback = NULL, array $columns = ['*']) {
 		set_time_limit(600); //10min
 
 		$size = $request->input('size') ?: config('size.export', 1000);
