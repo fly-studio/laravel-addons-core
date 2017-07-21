@@ -22,6 +22,7 @@ class TextResponse extends Response {
 	protected $tipType = null;
 	protected $result = 'success';
 	protected $outputRaw = false;
+	protected $disableUser = false;
 
 	public function setRequest($request)
 	{
@@ -32,6 +33,12 @@ class TextResponse extends Response {
 	public function getRequest()
 	{
 		return is_null($this->request) ? app('request') : $this->request;
+	}
+
+	public function disableUser($disabled)
+	{
+		$this->disableUser = $disabled;
+		return $this;
 	}
 
 	public function setResult($result)
@@ -159,7 +166,7 @@ class TextResponse extends Response {
 		$result = $this->outputRaw ? $this->getData() : [
 			'result' => $this->getResult(),
 			'status_code' => $this->getStatusCode(),
-			'uid' => Auth::check() ? Auth::user()->getKey() : null,
+			'uid' => $this->disableUser ? null : (Auth::check() ? Auth::user()->getKey() : null),
 			'debug' => config('app.debug'),
 			'message' => $this->getMessage(),
 			'tipType' => $this->getTipType(),

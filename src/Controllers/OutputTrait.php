@@ -9,7 +9,6 @@ use Addons\Core\Exceptions\OutputResponseException;
 trait OutputTrait {
 
 	protected $viewData = [];
-	protected $addons = true;
 	protected $outputTable = [
 		'error_param' => 'server.error_param',
 		'success_login' => 'auth.success_login',
@@ -48,7 +47,7 @@ trait OutputTrait {
 
 	protected function view($filename, $data = [])
 	{
-		if ($this->addons) $this->viewData['_user'] = Auth::user();
+		if (!$this->disableUser) $this->viewData['_user'] = Auth::user();
 		return view($filename, $data)->with($this->viewData);
 	}
 
@@ -72,7 +71,7 @@ trait OutputTrait {
 				array_unshift($parameters, isset($this->outputTable[$method]) ? $this->outputTable[$method] : $method);
 
 			//抛出成功或失败
-			$response = app(OutputResponseFactory::class)->make($result, ...$parameters);
+			$response = app(OutputResponseFactory::class)->make($result, ...$parameters)->disableUser($this->disableUser);
 			throw new OutputResponseException($response);
 		}
 
