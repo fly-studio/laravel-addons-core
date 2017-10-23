@@ -2,6 +2,7 @@
 namespace Addons\Core;
 
 use Illuminate\Support\Str;
+use Addons\Core\Cache\RWRedis;
 use Symfony\Component\Finder\Finder;
 use Addons\Core\Http\ResponseFactory;
 use Addons\Core\Events\EventDispatcher;
@@ -22,7 +23,9 @@ class ServiceProvider extends BaseServiceProvider
 	 */
 	public function register()
 	{
-
+		$this->app->singleton(RWRedis::class, function ($app) {
+			return new RWRedis();
+		});
 		/*$this->app->singleton('Illuminate\Contracts\Routing\ResponseFactory', function ($app) {
 			return new ResponseFactory($app['Illuminate\Contracts\View\Factory'], $app['redirect']);
 		});*/
@@ -39,24 +42,37 @@ class ServiceProvider extends BaseServiceProvider
 
 	private function registerPlugins()
 	{
-		//自动加载plugins下的配置，和ServiceProvider	
+		//自动加载plugins下的配置，和ServiceProvider
 		$loader = $GLOBALS['loader'];
-		$original_config = config('plugin');config()->offsetUnset('plugin');
 		$router = $this->app['router'];
-		$kernel = $this->app[\Illuminate\Contracts\Http\Kernel::class];
+		//Read Config
+		$original_config = config('plugin');
+		config()->offsetUnset('plugin');
+		$plugins = config('plugins');
+
+		//$kernel = $this->app[\Illuminate\Contracts\Http\Kernel::class];
 		//$consoleKernel = $this->app[\Illuminate\Contracts\Console\Kernel::class];
 		$paths = [base_path('plugins')];
 		if (defined('LPPATH') && is_dir(LPPATH.'plugins')) array_unshift($paths, LPPATH.'plugins');
+
 		foreach (Finder::create()->directories()->in($paths)->depth(0) as $path)
 		{
 			$path = rtrim($path, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
-			//read config
+
 			$file = $path.'config'.DIRECTORY_SEPARATOR.'plugin.php';
+			//read config
 			$config = array_merge($original_config, file_exists($file) ? require($file) : []);
+
+			$name = !empty($config['name']) ? $config['name'] : basename(rtrim($path, DIRECTORY_SEPARATOR));
+
+			if (isset($plugins[$name]))
+				$config = array_merge($config, $plugins[$name]);
+
 			if (!$config['enable']) continue;
+
 			//set path name namespace
 			$config['path'] = $path;
-			$config['name'] = $name = !empty($config['name']) ? $config['name'] : basename(rtrim($path, DIRECTORY_SEPARATOR));
+			$config['name'] = $name;
 			$config['namespace'] = $namespace = !empty($config['namespace']) ? $config['namespace'] : 'Plugins\\'.Str::studly($name);
 			//set psr-4
 			$loader->setPsr4($namespace.'\\App\\', array($path.'app'));

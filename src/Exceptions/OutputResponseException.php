@@ -7,7 +7,7 @@ use Addons\Core\Http\Response\TextResponse;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
-class OutputResponseException extends HttpResponseException{
+class OutputResponseException extends HttpResponseException {
 
 	public function __construct($message_name = null, $result = 'failure')
 	{

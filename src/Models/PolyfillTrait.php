@@ -6,34 +6,35 @@ trait PolyfillTrait{
 
 	protected $originalCastTypes = ['int','integer','real','float','double','string','bool','boolean','object','array','json','collection','date','datetime','timestamp'];
 
-	public function insertUpdate(array $attributes)
+	public static function insertUpdate(array $attributes)
 	{
-		$this->fill($attributes);
+		$model = new static;
+		$model->fill($attributes);
 
-		if ($this->usesTimestamps()) {
-			$this->updateTimestamps();
-		}
+		if ($model->usesTimestamps())
+			$model->updateTimestamps();
 
-		$attributes = $this->getAttributes();
 
-		$query = $this->newBaseQueryBuilder();
+		$attributes = $model->getAttributes();
+
+		$query = $model->newBaseQueryBuilder();
 		$processor = $query->getProcessor();
 		$grammar = $query->getGrammar();
 
-		$table = $grammar->wrapTable($this->getTable());
-		$keyName = $this->getKeyName();
+		$table = $grammar->wrapTable($model->getTable());
+		$keyName = $model->getKeyName();
 		$columns = $grammar->columnize(array_keys($attributes));
 		$insertValues = $grammar->parameterize($attributes);
 
 		$updateValues = [];
 
-		if ($this->primaryKey !== null) {
+		if ($model->getKeyName() !== null)
 			$updateValues[] = "{$grammar->wrap($keyName)} = LAST_INSERT_ID({$keyName})";
-		}
 
-		foreach ($attributes as $k => $v) {
+
+		foreach ($attributes as $k => $v)
 			$updateValues[] = sprintf("%s = '%s'", $grammar->wrap($k), $v);
-		}
+
 
 		$updateValues = join(',', $updateValues);
 
@@ -41,9 +42,9 @@ trait PolyfillTrait{
 
 		$id = $processor->processInsertGetId($query, $sql, array_values($attributes));
 
-		$this->setAttribute($keyName, $id);
+		$model->setAttribute($keyName, $id);
 
-		return $this;
+		return $model;
 	}
 
 	/**

@@ -10,7 +10,7 @@ use Addons\Core\Models\PolyfillTrait;
 class Tree extends Model {
 	use CacheTrait, CallTrait, PolyfillTrait;
 	use TreeTrait;
-	
+
 	//不能批量赋值
 	protected $guarded = ['id', 'level', 'path', 'order']; //这些字段禁止维护
 
@@ -52,7 +52,7 @@ class Tree extends Model {
 
 	/**
 	 * 获取所匹配的根节点Node
-	 * 
+	 *
 	 * @return mixed      得到root
 	 */
 	public function getRoot($columns = ['*'])
@@ -66,13 +66,13 @@ class Tree extends Model {
 			return $node;
 		} else {
 			list(,,$rootid) = explode('/', $node->getPathKey()); // [/0/1/2/3/] => 1
-			return $this->getNode($rootid, $columns);			
+			return $this->getNode($rootid, $columns);
 		}
 	}
 
 	/**
 	 * 获取父级的Node
-	 * 
+	 *
 	 * @return mixed      得到父级元素
 	 */
 	public function getParent($columns = ['*'])
@@ -145,8 +145,8 @@ class Tree extends Model {
 	 */
 	public function getTree($columns = ['*'], $with_id = TRUE)
 	{
-		$nodes = $this->getDescendant($columns)->add($this)->keyBy($this->getKeyName())->toArray();
-		return $this->_data_to_tree($nodes, $this->getParentKey(), $with_id);
+		$nodes = $this->getDescendant($columns)->prepend($this)->keyBy($this->getKeyName())->toArray();
+		return static::datasetToTree($nodes, $this->getParentKey(), $with_id);
 	}
 
 	/**
@@ -155,15 +155,16 @@ class Tree extends Model {
 	 * @param mixed $items 通过getData获得的二维数组(with_id)
 	 * @param integer $topid 提供此二维数组中的顶级节点topid
 	 */
-	public function _data_to_tree($items, $topid = 0, $with_id = TRUE)
-	{ 
+	public static function datasetToTree($items, $topid = 0, $with_id = TRUE)
+	{
+		$node = new static;
 		foreach ($items as $item)
 		{
-			if ($item[$this->getKeyName()] == $item[$this->parentKey]) continue; //如果父ID等于自己，避免死循环，跳过
+			if ($item[$node->getKeyName()] == $item[$node->parentKey]) continue; //如果父ID等于自己，避免死循环，跳过
 			if ($with_id)
-				$items[ ($item[$this->parentKey]) ][ 'children' ][ ($item[$this->getKeyName()]) ] = &$items[ ($item[$this->getKeyName()]) ];
+				$items[ ($item[$node->parentKey]) ][ 'children' ][ ($item[$node->getKeyName()]) ] = &$items[ ($item[$node->getKeyName()]) ];
 			else
-				$items[ ($item[$this->parentKey]) ][ 'children' ][] = &$items[ ($item[$this->getKeyName()]) ];
+				$items[ ($item[$node->parentKey]) ][ 'children' ][] = &$items[ ($item[$node->getKeyName()]) ];
 		}
 	 	return isset($items[ $topid ][ 'children' ]) ? $items[ $topid ][ 'children' ] : [];
 	}
@@ -208,7 +209,7 @@ class Tree extends Model {
 	{
 		return $this->move($target_id, 'inner');
 	}
-	
+
 	/**
 	 * 移动节点
 	 * @param  integer $target_id   目标CID
@@ -222,7 +223,7 @@ class Tree extends Model {
 
 		if ($move_type == 'inner') //成为别人子集，则直接调用,放入子集
 			return $this->update([$this->parentKey => $target_id]); //自动调取changeParent
-		
+
 		if ($targetNode->getParentKey() != $this->getParentKey()) //父级不相同
 			$this->update([$this->parentKey => $targetNode->getParentKey()]); //自动调取changeParent
 		if (!empty($this->orderKey))
@@ -276,5 +277,4 @@ class Tree extends Model {
 		return $this->levelKey;
 	}
 
-	
 }

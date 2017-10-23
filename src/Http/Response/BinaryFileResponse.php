@@ -50,7 +50,6 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 			$this->setAutoEtag();
 		elseif (!empty($etag))
 			$this->setEtag($etag);
-		
 
 		if ($lastModified === true)
 			$this->setAutoLastModified();
@@ -78,20 +77,26 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 
 		if (!empty($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) == $this->getEtag())
 		{
-			$this->setStatusCode(304);abort(304, '', ['Last-Modified' => $lastModified instanceof \DateTime ? $lastModified->format('D, d M Y H:i:s').' GMT' : $lastModified]); //此时必须退出，不然因为etag等头会触发chorme pending的BUG
+			$this->setStatusCode(304);
+			//此时必须退出，不然因为etag等头会触发chorme pending的BUG
+			abort(304, '', ['Last-Modified' => $lastModified instanceof \DateTime ? $lastModified->format('D, d M Y H:i:s').' GMT' : $lastModified]);
 			$this->maxlen = 0;
 		}
 		else if (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE']))
 		{
 			if (strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= ($lastModified instanceof \DateTime ? $lastModified->getTimeStamp() : $lastModified))
 			{
-				$this->setStatusCode(304);abort(304, '' , ['Last-Modified' => $lastModified instanceof \DateTime ? $lastModified->format('D, d M Y H:i:s').' GMT' : $lastModified]);
+				$this->setStatusCode(304);
+				abort(304, '' , ['Last-Modified' => $lastModified instanceof \DateTime ? $lastModified->format('D, d M Y H:i:s').' GMT' : $lastModified]);
 				$this->maxlen = 0;
 			}
-		} else {
+		}
+		else
+		{
 			switch (substr($_SERVER['SERVER_SOFTWARE'], 0, (int)strpos($_SERVER['SERVER_SOFTWARE'],'/'))) {
 				case 'nginx':
-					$this->headers->set('X-Accel-Redirect', rtrim(config('session.path'), '\\/').'/'.relative_path($this->file->getPathname(), base_path()));
+					$path = str_replace(['/./', '//'], ['/', '/'], rtrim(config('session.path'), '\\/').'/'.relative_path($this->file->getPathname(), base_path()));
+					$this->headers->set('X-Accel-Redirect', $path);
 					$this->headers->set('X-Accel-Buffering', 'no');
 					//$this->headers->set('X-Accel-Limit-Rate', '102400'); //速度限制 Byte/s
 					//$this->headers('Accept-Ranges', 'none');//单线程 限制多线程
@@ -113,7 +118,7 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 					$this->maxlen = 0;
 					break;
 			}
-		
+
 		}
 		return $this;
 	}

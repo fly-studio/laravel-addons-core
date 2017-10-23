@@ -12,13 +12,13 @@ trait ApiTrait {
 	public function _getColumns(Builder $builder)
 	{
 		static $table_columns;
-		
+
 		$query = $builder->getQuery();
 		$tables = [$query->from];
 		if (!empty($query->joins))
 			foreach ($query->joins as $v)
 				$tables[] = $v->table;
-		
+
 		$_columns = [];
 		foreach ($tables as &$v)
 		{
@@ -27,7 +27,7 @@ trait ApiTrait {
 			if (!isset($table_columns[$table]))
 				$table_columns[$table] = Schema::getColumnListing($table);
 				//$table_columns[$table] = $query->getConnection()->getDoctrineSchemaManager()->listTableColumns($table);
-			
+
 			foreach ($table_columns[$table] as $key/* => $value*/)
 				$_columns[$key] = isset($_columns[$key]) ? $_columns[$key] : $alias.'.'.$key;
 		}
@@ -37,16 +37,16 @@ trait ApiTrait {
 	/**
 	 * 给Builder绑定where条件
 	 * 注意：参数的值为空字符串，则会忽略该条件
-	 * 
-	 * @param  Request $request 
-	 * @param  Builder $builder 
+	 *
+	 * @param  Request $request
+	 * @param  Builder $builder
 	 * @return array           返回筛选(搜索)的参数
 	 */
 	private function _doFilters(Request $request, Builder $builder, $columns = [])
 	{
 		$filters = $this->_getFilters($request);
 		$operators = [
-			'in' => 'in', 'nin' => 'not in', 'is' => 'is', 
+			'in' => 'in', 'nin' => 'not in', 'is' => 'is',
 			'min' => '>=', 'gte' => '>=', 'max' => '<=', 'lte' => '<=', 'btw' => 'between', 'nbtw' => 'not between', 'gt' => '>', 'lt' => '<',
 			'neq' => '<>', 'ne' => '<>', 'eq' => '=', 'equal' => '=',
 			'lk' => 'like', 'like' => 'like', 'lkb' => 'like binary',
@@ -92,15 +92,15 @@ trait ApiTrait {
 	{
 		$orders = $this->_getOrders($request, $builder);
 		foreach ($orders as $k => $v)
-			$builder->orderBy($columns[$k] ?: $k, $v);
+			$builder->orderBy(isset($columns[$k]) ? $columns[$k] : $k, $v);
 		return $orders;
 	}
 	/**
 	 * 获取筛选(搜索)的参数
 	 * &f[username][lk]=abc&f[gender][eq]=1
-	 * 
-	 * @param  Request $request 
-	 * @param  Builder $builder 
+	 *
+	 * @param  Request $request
+	 * @param  Builder $builder
 	 * @return array           返回参数列表
 	 */
 	public function _getFilters(Request $request)
@@ -116,9 +116,9 @@ trait ApiTrait {
 	/**
 	 * 获取全文搜索的参数
 	 * &q[ofPinyin]=abc
-	 * 
-	 * @param  Request $request 
-	 * @param  Builder $builder 
+	 *
+	 * @param  Request $request
+	 * @param  Builder $builder
 	 * @return array           返回参数列表
 	 */
 	public function _getQueries(Request $request)
@@ -133,8 +133,8 @@ trait ApiTrait {
 	 * 2. order[id]=desc&order[created_at]=asc 类似这种方式
 	 * 默认是按主键倒序
 	 *
-	 * @param  Request $request 
-	 * @param  Builder $builder 
+	 * @param  Request $request
+	 * @param  Builder $builder
 	 * @return array           返回参数列表
 	 */
 	public function _getOrders(Request $request, Builder $builder)
@@ -166,7 +166,7 @@ trait ApiTrait {
 		return $paginate;
 	}
 
-	public function _getData(Request $request, Builder $builder, Closure $callback = NULL, array $columns = ['*'])
+	public function _getData(Request $request, Builder $builder, Closure $callback = null, array $columns = ['*'])
 	{
 		$paginate = $this->_getPaginate($request, $builder, $columns);
 
@@ -176,7 +176,7 @@ trait ApiTrait {
 		return $paginate->toArray() + ['filters' => $paginate->filters, 'queries' => $paginate->queries, 'orders' => $paginate->orders];
 	}
 
-	public function _getCount(Request $request, Builder $builder, $enable_filters = TRUE)
+	public function _getCount(Request $request, Builder $builder, $enable_filters = true)
 	{
 		$_b = clone $builder;
 		if ($enable_filters)
@@ -188,6 +188,10 @@ trait ApiTrait {
 		$query = $_b->getQuery();
 		if (!empty($query->groups)) //group by
 		{
+
+			return $query->getCountForPagination($query->groups);
+			// or
+			$query->columns = $query->groups;
 			return DB::table( DB::raw("({$_b->toSql()}) as sub") )
 				->mergeBindings($_b->getQuery()) // you need to get underlying Query Builder
 				->count();
@@ -195,7 +199,7 @@ trait ApiTrait {
 			return $_b->count();
 	}
 
-	public function _getExport(Request $request, Builder $builder, Closure $callback = NULL, array $columns = ['*']) {
+	public function _getExport(Request $request, Builder $builder, Closure $callback = null, array $columns = ['*']) {
 		set_time_limit(600); //10min
 
 		$size = $request->input('size') ?: config('size.export', 1000);
