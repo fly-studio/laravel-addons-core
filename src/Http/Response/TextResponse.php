@@ -1,4 +1,5 @@
 <?php
+
 namespace Addons\Core\Http\Response;
 
 use Lang, Auth;
@@ -141,7 +142,7 @@ class TextResponse extends Response {
 				foreach ($message as &$v)
 					$v = $this->makeReplacements($v, $transData);
 			}
-			else 
+			else
 				$message = $this->makeReplacements($message, $transData);
 		}
 		$this->message = $message;

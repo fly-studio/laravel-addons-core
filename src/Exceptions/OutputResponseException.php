@@ -11,7 +11,6 @@ class OutputResponseException extends HttpResponseException {
 
 	public function __construct($message_name = null, $result = 'failure')
 	{
-
 		if ($message_name instanceof TextResponse) {
 			$this->response = $message_name;
 		} else {
@@ -19,6 +18,18 @@ class OutputResponseException extends HttpResponseException {
 			!empty($message_name) && $this->setMessage($message_name);
 			$this->setResult($result);
 		}
+	}
+
+	public function setHeaders($headers)
+	{
+		$this->response->setHeaders($headers);
+		return $this;
+	}
+
+	public function setRequest($request)
+	{
+		$this->response->setRequest($request);
+		return $this;
 	}
 
 	public function setResult($result)

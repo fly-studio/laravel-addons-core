@@ -1,4 +1,5 @@
 <?php
+
 namespace Addons\Core\Http\Response;
 
 use Addons\Core\Tools\OutputEncrypt;

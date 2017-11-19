@@ -5,8 +5,8 @@
     "keywords": ["L5", "Laravel 5", "Laravel","Addons"],
     "license": "MIT",
     "support": {
-        "issues": "https://git.load-page.com/addons/core/issues",
-        "source": "https://git.load-page.com/addons/core"
+        "issues": "https://github.com/fly-studio/larvel-addons-core/issues",
+        "source": "https://github.com/fly-studio/larvel-addons-core"
     },
     "authors": [
         {
@@ -34,6 +34,15 @@
             "src/helpers.php"
         ]
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Addons\\Core\\ServiceProvider::class,"
+            ],
+            "aliases": {
+            }
+        }
+    },
     "minimum-stability": "dev"
-    
+
 }

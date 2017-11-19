@@ -1,4 +1,5 @@
 <?php
+
 namespace Addons\Core\Http\Response;
 
 use Addons\Core\File\Mimes;
@@ -8,7 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class OfficeResponse extends TextResponse {
 
-	protected $type = 'office';
+	//protected $type = 'office';
 
 	public function getFormatter()
 	{

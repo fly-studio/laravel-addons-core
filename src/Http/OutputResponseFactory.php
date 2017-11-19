@@ -3,11 +3,13 @@
 namespace Addons\Core\Http;
 
 use Lang;
+use Exception;
 use BadMethodCallException;
 use Addons\Core\Http\Response\ApiResponse;
+use Addons\Core\Http\Output\TipTypeManager;
 use Addons\Core\Http\Response\TextResponse;
 use Addons\Core\Http\Response\OfficeResponse;
-use Addons\Core\Http\Output\TipTypeManager;
+use Addons\Core\Http\Response\ExceptionResponse;
 
 class OutputResponseFactory {
 
@@ -32,7 +34,7 @@ class OutputResponseFactory {
 				return $this->$result(...$config);
 		}
 
-        throw new BadMethodCallException("OutputResponse method [{$result}] does not exist.");
+		throw new BadMethodCallException("OutputResponse method [{$result}] does not exist.");
 	}
 
 	public function api($data, $encrypted = false)
@@ -45,6 +47,18 @@ class OutputResponseFactory {
 	{
 		$response = new OfficeResponse();
 		return $response->setData($data);
+	}
+
+	public function exception(Exception $e, $message_name = null, $tipType = false, $data = [] , $showData = false)
+	{
+		$response = new ExceptionResponse();
+		$response
+			->setMessage($message_name, $data)
+			->setAutoTip($tipType)
+			->withException($e);
+		if ($showData) $response->setData($data);
+		
+		return $response;
 	}
 
 	public function success($message_name = null, $tipType = true, $data = [], $showData = true)
