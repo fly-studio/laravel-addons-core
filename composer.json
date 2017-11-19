@@ -37,7 +37,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Addons\\Core\\ServiceProvider::class,"
+                "Addons\\Core\\ServiceProvider"
             ],
             "aliases": {
             }
