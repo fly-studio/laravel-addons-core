@@ -57,7 +57,7 @@ class OutputResponseFactory {
 			->setAutoTip($tipType)
 			->withException($e);
 		if ($showData) $response->setData($data);
-		
+
 		return $response;
 	}
 

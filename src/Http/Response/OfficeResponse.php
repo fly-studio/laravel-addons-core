@@ -17,7 +17,7 @@ class OfficeResponse extends TextResponse {
 		{
 			$request = app('request');
 			$of = $request->input('of', null);
-			if (!in_array($of, ['csv', 'xls', 'xlsx', 'pdf']))
+			if (!in_array($of, ['csv', 'xls', 'xlsx']))
 				$of = 'xlsx';
 			return $of;
 		}
@@ -38,7 +38,6 @@ class OfficeResponse extends TextResponse {
 			case 'csv':
 			case 'xls':
 			case 'xlsx':
-			case 'pdf': //download
 				$filename = Office::$of($data);
 				$response = response()->download($filename, date('YmdHis').'.'.$of, ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)])->deleteFileAfterSend(true)->setStatusCode($this->getStatusCode());
 				break;

@@ -11,7 +11,7 @@ class RedirectType extends TipType {
 
 	public function setUrl($url)
 	{
-		$this->url = url($url);
+		$this->url = app('router')->has($url) ? route($url) : url($url);
 		return $this;
 	}
 
@@ -26,18 +26,18 @@ class RedirectType extends TipType {
 	}
 
 	/**
-     * Convert the model instance to an array.
-     *
-     * @return array
-     */
-    public function toArray()
-    {
-        return [
+	 * Convert the model instance to an array.
+	 *
+	 * @return array
+	 */
+	public function toArray()
+	{
+		return [
 			'type' => $this->type,
 			'url' => $this->getUrl(),
 			'timeout' => $this->getTimeout(),
 		];
-    }
+	}
 
 
 }

@@ -6,9 +6,9 @@ return [
 	| Common Language Lines
 	|--------------------------------------------------------------------------
 	|
-	| 
-	| 
-	| 
+	|
+	|
+	|
 	|
 	*/
 
@@ -55,7 +55,7 @@ return [
 	'validation' => [
 		'csrf_invalid' => [
 			'title' => 'CSRF检测无法通过',
-			'content' => '您可能停留页面时间过长，请使用其它方式保存关键数据后，刷新当前页面后再重试！',
+			'content' => '您可能停留页面时间过长，请保存数据后，刷新当前页面后再重试！',
 		],
 	],
 	'auth' => [
@@ -78,6 +78,10 @@ return [
 		'unlogin' => [
 			'title' => '您尚未登录',
 			'content' => '您尚未登录，无法访问本页面，登录请<a href="'.url('auth').'" target="_self">点击这里</a>！',
+		],
+		'unAuthorization' => [
+			'title' => 'API校验错误',
+			'content' => '您调用的API校验错误，需要在HTTP请求头中添加正确的：Authorization头信息。',
 		],
 	],
 	'document' => [

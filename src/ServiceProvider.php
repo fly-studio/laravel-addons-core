@@ -2,7 +2,9 @@
 namespace Addons\Core;
 
 use Addons\Core\Cache\RWRedis;
+use Addons\Core\Middleware\Encrypt;
 use Addons\Core\Http\ResponseFactory;
+use Addons\Core\Middleware\CrossDomain;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -28,6 +30,13 @@ class ServiceProvider extends BaseServiceProvider
 
 		$this->mergeConfigFrom(__DIR__ . '/../config/mimes.php', 'mimes');
 		$this->mergeConfigFrom(__DIR__ . '/../config/output.php', 'output');
+
+		//register router middleware
+		$router = $this->app['router'];
+		$router->aliasMiddleware('cross-domain', CrossDomain::class);
+		$router->aliasMiddleware('encrypt', Encrypt::class);
+
+		$this->app->instance('path.vendor', realpath(__DIR__.'/../../../'));
 	}
 
 	/**

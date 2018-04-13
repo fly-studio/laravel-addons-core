@@ -22,13 +22,6 @@ if (! function_exists('static_path')) {
 	}
 }
 
-if (! function_exists('plugins_path')) {
-	function plugins_path($path = '')
-	{
-		return static_path('plugins'.DIRECTORY_SEPARATOR.$path);
-	}
-}
-
 if (! function_exists('static_url')) {
 	function static_url($url = '')
 	{
@@ -38,9 +31,9 @@ if (! function_exists('static_url')) {
 	}
 }
 
-if (! function_exists('plugins_url')) {
-	function plugins_url($url = '')
+if (! function_exists('repo')) {
+	function repo($className)
 	{
-		return static_url('plugins/'.$url);
+		return app('App\\Repositories\\'.studly_case($className).'Repository');
 	}
 }

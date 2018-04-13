@@ -5,6 +5,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 trait CallTrait {
+
 	/**
 	 * Handle dynamic method calls into the model.
 	 *
@@ -16,15 +17,15 @@ trait CallTrait {
 	{
 		if (Str::startsWith($method, ['findBy', 'findManyBy']))
 		{
-			$limit = $method[5] === 'y';
-			$fields = explode('-', Str::snake(substr($method, $limit ? 6 : 10), '-'));
+			$singled = $method[5] === 'y';
+			$fields = explode('-', Str::snake(substr($method, $singled ? 6 : 10), '-'));
 			if (count($fields) != count($parameters))
 				throw new InvalidArgumentException("method '%s' needs %d parameters", $method, count($fields));
 
 			$query = $this->newQuery();
 			foreach($parameters as $key => $param)
 				$query->where($fields[$key], $param);
-			return $limit ? $query->first() : $query->get();
+			return $singled ? $query->first() : $query->get();
 		}
 
 		return parent::__call($method, $parameters);

@@ -1,10 +1,12 @@
 <?php
+
 namespace Addons\Core\Models;
 
 use Illuminate\Support\Str;
+
 trait PolyfillTrait{
 
-	protected $originalCastTypes = ['int','integer','real','float','double','string','bool','boolean','object','array','json','collection','date','datetime','timestamp'];
+	protected $originalCastTypes = ['int','integer','real','float','double','string','bool','boolean','object','array','json','collection','date','datetime','timestamp', 'custom_datetime'];
 
 	public static function insertUpdate(array $attributes)
 	{
@@ -61,7 +63,7 @@ trait PolyfillTrait{
 		{
 			$method = 'as'.Str::studly($type);
 			if (method_exists($this, $method))
-				return call_user_func([$this, $method], $value);
+				return call_user_func([$this, $method], $value, $key, $type);
 		}
 		return parent::castAttribute($key, $value);
 	}
@@ -76,33 +78,33 @@ trait PolyfillTrait{
 		$data = parent::attributesToArray();
 		foreach ($this->getCasts() as $key => $type)
 		{
-			if (!empty($type) && !in_array($type, $this->originalCastTypes) && isset($data[$type]))
+			if (!empty($type) && !in_array($type, $this->originalCastTypes) && isset($data[$key]))
 			{
 				$method = Str::camel($type).'ToArray';
 				if (method_exists($this, $method))
-					$data[$key] = call_user_func([$this, $method], $data[$key]);
+					$data[$key] = call_user_func([$this, $method], $data[$key], $key, $type);
 			}
 		}
 		return $data;
 	}
 
 	/**
-     * Set a given attribute on the model.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return $this
-     */
-    public function setAttribute($key, $value)
-    {
+	 * Set a given attribute on the model.
+	 *
+	 * @param  string  $key
+	 * @param  mixed  $value
+	 * @return $this
+	 */
+	public function setAttribute($key, $value)
+	{
 		$type = $this->hasCast($key) ? $this->getCastType($key) : null;
 		if (!empty($type) && !$this->hasSetMutator($key)  && !in_array($type, $this->originalCastTypes))
 		{
 			$method = 'from'.Str::studly($type);
 			if (method_exists($this, $method))
-				$value = call_user_func([$this, $method], $value);
+				$value = call_user_func([$this, $method], $value, $key, $type);
 		}
 		return parent::setAttribute($key, $value);
-    }
+	}
 
 }

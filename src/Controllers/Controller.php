@@ -1,4 +1,5 @@
 <?php
+
 namespace Addons\Core\Controllers;
 
 use Addons\Core\Events\ControllerEvent;
@@ -7,7 +8,9 @@ use Addons\Core\Controllers\PermissionTrait;
 use Illuminate\Routing\Controller as BaseController;
 
 class Controller extends BaseController {
+
 	use PermissionTrait, OutputTrait;
+
 	protected $disableUser = false;
 
 	public function callAction($method, $parameters)

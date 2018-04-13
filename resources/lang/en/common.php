@@ -6,9 +6,9 @@ return [
 	| Common Language Lines
 	|--------------------------------------------------------------------------
 	|
-	| 
-	| 
-	| 
+	|
+	|
+	|
 	|
 	*/
 
@@ -78,6 +78,10 @@ return [
 		'unlogin' => [
 			'title' => 'No Login',
 			'content' => 'No login, if you wanna login, <a href="'.url('auth').'" target="_self">Click here</a>.',
+		],
+		'unAuthorization' => [
+			'title' => 'API Authorization Error',
+			'content' => 'API Authorization Error, You must add the correctly HTTP Header "Authorization" to your request.',
 		],
 	],
 	'document' => [

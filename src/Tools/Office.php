@@ -1,11 +1,17 @@
 <?php
+
 namespace Addons\Core\Tools;
+
+use PhpOffice\PhpSpreadsheet\Writer\Csv;
+use PhpOffice\PhpSpreadsheet\Writer\Xls;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class Office {
 
 	public static function excel($data, $ext = 'xlsx', $filepath = TRUE)
 	{
-		$excel = new \PHPExcel();
+		$excel = new Spreadsheet();
 		$excel->setActiveSheetIndex(0);
 		$sheet = $excel->getActiveSheet();
 		array_walk($data, function(&$v){
@@ -18,21 +24,18 @@ class Office {
 		@chmod($filepath, 0777);
 		switch (strtolower($ext)) {
 			case 'xlsx':
-				$objWriter = new \PHPExcel_Writer_Excel2007($excel);
+				$objWriter = new Xlsx($excel);
 				break;
 			case 'xls':
-				$objWriter = new \PHPExcel_Writer_Excel5($excel);
+				$objWriter = new Xls($excel);
 				break;
 			case 'csv':
-				$objWriter = new \PHPExcel_Writer_CSV($excel);
-				break;
-			case 'pdf':
-				$objWriter = new \PHPExcel_Writer_PDF($excel);
+				$objWriter = new Csv($excel);
 				break;
 			default:
 				# code...
 				break;
-		}		
+		}
 		$objWriter->save($filepath);
 		//@unlink($filepath);
 		return $filepath;
@@ -53,8 +56,4 @@ class Office {
 		return self::excel($data ,'xlsx');
 	}
 
-	public static function pdf($data)
-	{
-		return self::excel($data ,'pdf');
-	}
 }

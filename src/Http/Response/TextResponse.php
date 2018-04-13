@@ -158,8 +158,7 @@ class TextResponse extends Response {
 	public function getMessage()
 	{
 		$code = $this->getStatusCode();
-		$message = $code != 200 && Lang::has('exception.http.'.$code) ? trans('exception.http.'.$code) : trans('core::common.default.' . $this->getResult());
-		return empty($this->message) ? $message : $this->message;
+		return empty($this->message) ? ($code != 200 && Lang::has('exception.http.'.$code) ? trans('exception.http.'.$code) : trans('core::common.default.' . $this->getResult())) : $this->message;
 	}
 
 	public function getOutputData()
@@ -174,6 +173,7 @@ class TextResponse extends Response {
 			'data' => $this->getData(),
 			'time' => time(),
 			'duration' => microtime(true) - LARAVEL_START,
+			'body' => strval($this->original),
 		];
 		return $result;
 	}
@@ -185,6 +185,7 @@ class TextResponse extends Response {
 		$callback = $request->query('callback'); //必须是GET请求，以免和POST字段冲突
 		$of = $this->getFormatter();
 		$response = null;
+		$original = $this->original;
 		switch ($of) {
 			case 'xml':
 			case 'txt':
@@ -199,76 +200,77 @@ class TextResponse extends Response {
 				$response = $this->setContent($jsonResponse->getContent())->withHeaders($jsonResponse->headers->all())->header('Content-Type', 'application/json');
 				break;
 		}
+		$this->original = $original;
 		return $response;
 	}
 
-    /**
-     * Sends HTTP headers and content.
-     *
-     * @return Response
-     */
-    public function send()
-    {
-    	//404的错误比较特殊，无法找到路由，并且不会执行prepare
-    	$this->prepare($this->getRequest());
-
-    	return parent::send();
-    }
-
-    /**
-     * Returns the Response as an HTTP string.
-     *
-     * The string representation of the Response is the same as the
-     * one that will be sent to the client only if the prepare() method
-     * has been called before.
-     *
-     * @return string The Response as an HTTP string
-     *
-     * @see prepare()
-     */
-    public function __toString()
-    {
+	/**
+	 * Sends HTTP headers and content.
+	 *
+	 * @return Response
+	 */
+	public function send()
+	{
 		//404的错误比较特殊，无法找到路由，并且不会执行prepare
-    	$this->prepare($this->getRequest());
-        return
-            sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText)."\r\n".
-            $this->headers."\r\n".
-            $this->getContent();
-    }
+		$this->prepare($this->getRequest());
+
+		return parent::send();
+	}
 
 	/**
-     * Make the place-holder replacements on a line.
-     *
-     * @param  string  $line
-     * @param  array   $replace
-     * @return string
-     */
-    protected function makeReplacements($line, array $replace)
-    {
-        $replace = $this->sortReplacements($replace);
-        $replace = Arr::dot($replace);
+	 * Returns the Response as an HTTP string.
+	 *
+	 * The string representation of the Response is the same as the
+	 * one that will be sent to the client only if the prepare() method
+	 * has been called before.
+	 *
+	 * @return string The Response as an HTTP string
+	 *
+	 * @see prepare()
+	 */
+	public function __toString()
+	{
+		//404的错误比较特殊，无法找到路由，并且不会执行prepare
+		$this->prepare($this->getRequest());
+		return
+			sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText)."\r\n".
+			$this->headers."\r\n".
+			$this->getContent();
+	}
 
-        foreach ($replace as $key => $value) {
-            $line = str_replace(
-                [':'.$key, ':'.Str::upper($key), ':'.Str::ucfirst($key)],
-                [$value, Str::upper($value), Str::ucfirst($value)],
-                $line
-            );
-        }
+	/**
+	 * Make the place-holder replacements on a line.
+	 *
+	 * @param  string  $line
+	 * @param  array   $replace
+	 * @return string
+	 */
+	protected function makeReplacements($line, array $replace)
+	{
+		$replace = $this->sortReplacements($replace);
+		$replace = Arr::dot($replace);
 
-        return $line;
-    }
+		foreach ($replace as $key => $value) {
+			$line = str_replace(
+				[':'.$key, ':'.Str::upper($key), ':'.Str::ucfirst($key)],
+				[$value, Str::upper($value), Str::ucfirst($value)],
+				$line
+			);
+		}
 
-    /**
-     * Sort the replacements array.
-     *
-     * @param  array  $replace
-     * @return array
-     */
-    protected function sortReplacements(array $replace)
-    {
-        return (new Collection($replace))->sortBy(function ($value, $key) {
-            return mb_strlen($key) * -1;
-        })->all();
-    }
+		return $line;
+	}
+
+	/**
+	 * Sort the replacements array.
+	 *
+	 * @param  array  $replace
+	 * @return array
+	 */
+	protected function sortReplacements(array $replace)
+	{
+		return (new Collection($replace))->sortBy(function ($value, $key) {
+			return mb_strlen($key) * -1;
+		})->all();
+	}
 }

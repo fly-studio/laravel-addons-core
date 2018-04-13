@@ -1,4 +1,5 @@
 <?php
+
 namespace Addons\Core\Controllers;
 
 use Auth;
@@ -75,7 +76,7 @@ trait OutputTrait {
 			throw new OutputResponseException($response);
 		}
 
-        throw new BadMethodCallException("Method [{$method}] does not exist.");
+		throw new BadMethodCallException("Method [{$method}] does not exist.");
 	}
 
 }

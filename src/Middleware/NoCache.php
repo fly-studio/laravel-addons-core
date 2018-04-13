@@ -19,7 +19,7 @@ class NoCache
 		$response = $next($request);
 		
 		$response->headers->set('P3P','CP="CAO PSA OUR"');
-		if(in_array($request->method(), ['POST', 'PUT', 'DELETE'])){
+		if(in_array(strtoupper($request->method()), ['POST', 'PUT', 'DELETE'])){
 			//header no cache when post
 			foreach([
 				'Expires' => '0',

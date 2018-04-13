@@ -33,15 +33,19 @@ class ResponseFactory extends FactoryContract {
 	 */
 	public function download($file, $name = null, array $headers = [], $options = [], $disposition = 'attachment')
 	{
-		$etag = isset($options['etag']) ? $options['etag'] : false;
-		$last_modified = isset($options['last_modified']) ? $options['last_modified'] : true;
 		!empty($options['cached']) && $headers = array_merge($headers, ['Cache-Control' => 'private, max-age=3600, must-revalidate', 'Pragma' => 'cache']);
 		!empty($options['mime_type']) && $headers = array_merge($headers, ['Content-Type' => $options['mime_type']]);
-		$response = new BinaryFileResponse($file, 200, $headers, true, $disposition, $etag, $last_modified);
 
-		if (!is_null($name)) {
-			return $response->setContentDisposition($disposition, $name, str_replace('%', '', Str::ascii($name)));
-		}
+		$response = new BinaryFileResponse($file, 200, $headers, true, $disposition);
+
+		if (isset($options['last_modified']))
+			$response->setLastModified($options['last_modified']);
+
+		if (isset($options['etag']))
+			$response->setEtag($options['etag']);
+
+		if (!is_null($name))
+			$response->setContentDisposition($disposition, $name, str_replace('%', '', Str::ascii($name)));
 
 		return $response;
 	}

@@ -39,7 +39,7 @@ class ApiResponse extends TextResponse {
 		if ($encrypted)
 		{
 			$encrypt = new OutputEncrypt;
-			$this->encryptedKey = $encrypt->getEncryptedKey();
+			$this->encryptedKey = $encrypt->getClientEncryptedKey();
 			$this->data = empty($this->encryptedKey) ? null : $encrypt->encode($data); //如果key不对,就不用耗费资源加密了
 		}
 		return $this;
