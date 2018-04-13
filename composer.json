@@ -15,10 +15,10 @@
         }
     ],
     "require": {
-        "php": ">=5.6.10",
-        "illuminate/support": "~5.5",
-        "illuminate/translation": "~5.5",
-        "illuminate/database": "~5.5",
+        "php": ">=7.1.3",
+        "illuminate/support": "~5.6",
+        "illuminate/translation": "~5.6",
+        "illuminate/database": "~5.6",
         "addons/smarty": "~1.0",
         "addons/func": "~1.0",
         "addons/censor": "~1.0"
