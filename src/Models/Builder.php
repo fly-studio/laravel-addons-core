@@ -1,10 +1,12 @@
 <?php
+
 namespace Addons\Core\Models;
 
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Illuminate\Database\Eloquent\Builder as Base;
 
-trait CallTrait {
+class Builder extends Base {
 
 	/**
 	 * Handle dynamic method calls into the model.
@@ -19,13 +21,18 @@ trait CallTrait {
 		{
 			$singled = $method[5] === 'y';
 			$fields = explode('-', Str::snake(substr($method, $singled ? 6 : 10), '-'));
+
+			$columns = ['*'];
+			if (count($parameters) == count($fields) + 1)
+				$columns = array_pop($parameters);
+
 			if (count($fields) != count($parameters))
 				throw new InvalidArgumentException("method '%s' needs %d parameters", $method, count($fields));
 
-			$query = $this->newQuery();
 			foreach($parameters as $key => $param)
-				$query->where($fields[$key], $param);
-			return $singled ? $query->first() : $query->get();
+				$this->where($fields[$key], $param);
+
+			return $singled ? $this->first($columns) : $this->get($columns);
 		}
 
 		return parent::__call($method, $parameters);

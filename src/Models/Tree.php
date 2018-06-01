@@ -1,14 +1,16 @@
 <?php
+
 namespace Addons\Core\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Addons\Core\Models\TreeTrait;
 use Addons\Core\Models\CacheTrait;
-use Addons\Core\Models\CallTrait;
+use Addons\Core\Models\BuilderTrait;
 use Addons\Core\Models\PolyfillTrait;
+use Illuminate\Database\Eloquent\Model;
 
 class Tree extends Model {
-	use CacheTrait, CallTrait, PolyfillTrait;
+
+	use CacheTrait, BuilderTrait, PolyfillTrait;
 	use TreeTrait;
 
 	//不能批量赋值
@@ -113,11 +115,11 @@ class Tree extends Model {
 	}
 
 	/**
-	 * 获得所有子(孙)集，返回一个Collection
+	 * 获得所有子(孙)集，不包含自己，返回一个Collection
 	 *
 	 * @return array 返回数据
 	 */
-	public function getDescendant($columns = ['*'])
+	public function getLeaves($columns = ['*'])
 	{
 		$columns = $this->formatColumns($columns);
 		$node = $this;
@@ -126,59 +128,46 @@ class Tree extends Model {
 			$builder = static::where($this->pathKey, 'LIKE', $node->getPathKey().'%')->where($node->getKeyName(), '!=', $node->getKey());
 			!empty($this->orderKey) && $builder->orderBy($this->orderKey);
 			!empty($this->pathKey) && $builder->orderBy($this->pathKey);
+
 			return $builder->get($columns);
-		} else {
+		}
+		else
+		{
 			$result = $this->newCollection();
 			$children = $this->getChildren($columns);
 			foreach($children as $v)
 			{
 				$result[] = $v;
-				$result = $result->merge($v->getDescendant($columns));
+				$result = $result->merge($v->getLeaves($columns));
 			}
 			return $result;
 		}
 	}
+
 	/**
-	 * 获得所有子(孙)集，返回一个tree数组
+	 * 获得一颗树，返回一个Tree的数组
 	 *
+	 * @param array $columns 需要取出的字段名
+	 * @param bool 返回的children中，是否以ID为Key
 	 * @return array 返回数据
 	 */
-	public function getTree($columns = ['*'], $with_id = TRUE)
+	public function getTree(array $columns = ['*'], bool $idAsKey = true)
 	{
-		$nodes = $this->getDescendant($columns)->prepend($this)->keyBy($this->getKeyName())->toArray();
-		return static::datasetToTree($nodes, $this->getParentKey(), $with_id);
+		$nodes = $this->getLeaves($columns)->prepend($this)->keyBy($this->getKeyName())->toArray();
+
+		return static::datasetToTree($nodes, $idAsKey);
 	}
 
-	/**
-	 * 将上面的二维class数组生成tree，必须是设置with_id的二维数组
-	 *
-	 * @param mixed $items 通过getData获得的二维数组(with_id)
-	 * @param integer $topid 提供此二维数组中的顶级节点topid
-	 */
-	public static function datasetToTree($items, $topid = 0, $with_id = TRUE)
-	{
-		$node = new static;
-		foreach ($items as $item)
-		{
-			if ($item[$node->getKeyName()] == $item[$node->parentKey]) continue; //如果父ID等于自己，避免死循环，跳过
-			if ($with_id)
-				$items[ ($item[$node->parentKey]) ][ 'children' ][ ($item[$node->getKeyName()]) ] = &$items[ ($item[$node->getKeyName()]) ];
-			else
-				$items[ ($item[$node->parentKey]) ][ 'children' ][] = &$items[ ($item[$node->getKeyName()]) ];
-		}
-	 	return isset($items[ $topid ][ 'children' ]) ? $items[ $topid ][ 'children' ] : [];
-	}
-
-	private function formatColumns($columns)
+	private function formatColumns(array $columns)
 	{
 		if (in_array('*', $columns)) return $columns;
+
 		!in_array($this->getKeyName(), $columns) && $columns[] = $this->getKeyName();
 		!in_array($this->parentKey, $columns) && $columns[] = $this->parentKey;
 		!in_array($this->pathKey, $columns) && $columns[] = $this->pathKey;
 
 		return $columns;
 	}
-
 
 	public function newOrder()
 	{

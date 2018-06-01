@@ -27,6 +27,8 @@ class TipTypeManager extends Manager {
 			return $this->driver('refresh');
 		elseif ($original === false)
 			return $this->driver('back');
+		elseif (is_null($original) || is_numeric($original))
+			return $this->driver('toast')->setTimeout($original);
 		else
 			return $this->driver('redirect')->setUrl($original);
 	}

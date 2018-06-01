@@ -158,7 +158,11 @@ class TextResponse extends Response {
 	public function getMessage()
 	{
 		$code = $this->getStatusCode();
-		return empty($this->message) ? ($code != 200 && Lang::has('exception.http.'.$code) ? trans('exception.http.'.$code) : trans('core::common.default.' . $this->getResult())) : $this->message;
+		return empty($this->message) ? (
+			$code != 200 && Lang::has('exception.http.'.$code) ? trans('exception.http.'.$code) : (
+				Lang::has('default.' . $this->getResult() ) ? trans('default.' . $this->getResult()) : trans('core::common.default.' . $this->getResult())
+			)
+		) : $this->message;
 	}
 
 	public function getOutputData()
@@ -247,10 +251,14 @@ class TextResponse extends Response {
 	 */
 	protected function makeReplacements($line, array $replace)
 	{
+		if (empty($replace)) {
+			return $line;
+		}
 		$replace = $this->sortReplacements($replace);
 		$replace = Arr::dot($replace);
 
 		foreach ($replace as $key => $value) {
+			if (is_array($value)) continue;
 			$line = str_replace(
 				[':'.$key, ':'.Str::upper($key), ':'.Str::ucfirst($key)],
 				[$value, Str::upper($value), Str::ucfirst($value)],
