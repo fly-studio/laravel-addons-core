@@ -22,9 +22,6 @@ class ServiceProvider extends BaseServiceProvider
 	 */
 	public function register()
 	{
-		$this->app->singleton(RWRedis::class, function ($app) {
-			return new RWRedis();
-		});
 		//replace class
 		$this->app->bind('Illuminate\Contracts\Routing\ResponseFactory', ResponseFactory::class);
 

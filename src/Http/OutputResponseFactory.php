@@ -37,10 +37,10 @@ class OutputResponseFactory {
 		throw new BadMethodCallException("OutputResponse method [{$result}] does not exist.");
 	}
 
-	public function api($data, $encrypted = false)
+	public function api($data, $encrypted = false, $rsaType = 'public')
 	{
 		$response = new ApiResponse();
-		return $response->setData($data, $encrypted);
+		return $response->setData($data, $encrypted, $rsaType);
 	}
 
 	public function office($data)

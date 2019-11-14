@@ -50,7 +50,7 @@ class ResponseFactory extends FactoryContract {
 		return $response;
 	}
 
-	public function preview($file, $headers = [], $options = [])
+	public function preview($file, array $headers = [], $options = [])
 	{
 		return $this->download($file, null, $headers, $options, null);
 	}

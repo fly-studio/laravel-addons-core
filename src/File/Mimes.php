@@ -1,7 +1,6 @@
 <?php
+
 namespace Addons\Core\File;
-
-
 
 class Mimes {
 
@@ -34,7 +33,7 @@ class Mimes {
 
 	public function mime_by_ext($ext)
 	{
-		return $this->mimes[strtolower($ext)][0] ?: FALSE;
+		return isset($this->mimes[strtolower($ext)]) ? $this->mimes[strtolower($ext)][0] : false;
 	}
 
 	public function ext_by_mime($mime)

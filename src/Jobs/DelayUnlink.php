@@ -5,18 +5,15 @@ namespace Addons\Core\Jobs;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Bus\SelfHandling;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 
-use Addons\Core\Models\WechatMessageMedia;
-use Addons\Core\Tools\Wechat\API;
-use Addons\Core\Tools\Wechat\Attachment;
-class DelayUnlink implements SelfHandling, ShouldQueue
+class DelayUnlink implements ShouldQueue
 {
-	use Queueable;
-	use InteractsWithQueue, SerializesModels;
+	use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-	public $path, $hash;
+	protected $path;
+	protected $hash;
 	/**
 	 * Create a new job instance.
 	 *
@@ -34,7 +31,9 @@ class DelayUnlink implements SelfHandling, ShouldQueue
 	 * @return void
 	 */
 	public function handle()
-	{return ;
+	{
+		return ;
+
 		if (is_link($this->path))
 			unlink($this->path);
 		else if (is_dir($this->path))

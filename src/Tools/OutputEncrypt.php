@@ -3,78 +3,158 @@
 namespace Addons\Core\Tools;
 
 use phpseclib\Crypt\RSA;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Encryption\Encrypter;
+use Addons\Core\Tools\Encrypter;
 
 class OutputEncrypt {
 
-	public static $key;
+	private $publicKey;
+	private $privateKey;
+	private $aesKey;
 
-	public function getClientEncryptedKey()
+	public function __construct(string $publicKey = null, string $privateKey = null)
 	{
-		$public = urldecode(request()->header('X-RSA'));
-		$rsa = new RSA;
-		$rsa->setPublicKey();
-		$rsa->setEncryptionMode(RSA::ENCRYPTION_PKCS1);
-		$rsa->loadKey($public);
-		$key = $rsa->encrypt(base64_encode($this->getAesKey()));
-		return $key ? base64_encode($key) : false;
+		$this->publicKey = $publicKey;
+		$this->privateKey = $privateKey;
 	}
 
-	public function getServerEncryptedKey()
+	public function encodeByPublic(string $value, string $aesKey = null)
 	{
-		$private = $this->getRsaPrivateKey();
+		$encoded = $this->encryptAesToRaw($value, $aesKey);
+
+		$aesEncrypted = $this->encryptPublicRsa($encoded['aesBase64']);
+
+		return [
+			'aesEncrypted' => !empty($aesEncrypted) ? base64_encode($aesEncrypted) : null,
+			'value' => !empty($aesEncrypted) ? base64_encode($encoded['value']) : null
+		];
+	}
+
+	public function encodeByPrivate(string $value, string $aesKey = null)
+	{
+		$encoded = $this->encryptAesToRaw($value, $aesKey);
+
+		$aesEncrypted = $this->encryptPrivateRsa($encoded['aesBase64']);
+
+		return [
+			'aesEncrypted' => !empty($aesEncrypted) ? base64_encode($aesEncrypted) : null,
+			'value' => !empty($aesEncrypted) ? base64_encode($encoded['value']) : null
+		];
+	}
+
+	public function decodeByPublic(string $value, string $aesEncrypted)
+	{
+		$decoded = $this->decryptPublicRsa(base64_decode($aesEncrypted));
+
+		if (empty($decoded))
+			return null;
+
+		return $this->decryptAesFromRaw($value, $decoded);
+	}
+
+	public function decodeByPrivate(string $value, string $aesEncrypted)
+	{
+		$decoded = $this->decryptPrivateRsa(base64_decode($aesEncrypted));
+
+		if (empty($decoded))
+			return null;
+
+		return $this->decryptAesFromRaw($value, $decoded);
+	}
+
+	private function makePrivateRsa()
+	{
 		$rsa = new RSA;
 		$rsa->setPrivateKey();
 		$rsa->setEncryptionMode(RSA::ENCRYPTION_PKCS1);
-		$rsa->loadKey($private);
-		$key = $rsa->encrypt(base64_encode($this->getAesKey()));
-		return $key ? base64_encode($key) : false;
+		$rsa->loadKey($this->privateKey);
+
+		return $rsa;
 	}
 
-	public function encode($data)
+	private function makePublicRsa()
 	{
-		$e = new Encrypter($this->getAesKey(), config('app.cipher'));
-		return $e->encrypt($data);
+		$rsa = new RSA;
+		$rsa->setPublicKey();
+		$rsa->setEncryptionMode(RSA::ENCRYPTION_PKCS1);
+		$rsa->loadKey($this->publicKey);
+
+		return $rsa;
 	}
 
-	public function decode($data)
+	public function encryptPrivateRsa(string $value)
 	{
-		$e = new Encrypter($this->getAesKey(), config('app.cipher'));
-		return $e->decrypt($data);
+		return $this->makePrivateRsa()->encrypt($value);
 	}
 
-	public function getAesKey()
+	public function decryptPrivateRsa(string $value)
 	{
-		$key = session('client.encrpted.aes');
-		if (empty($key)) {
-			$key = random_bytes(config('app.cipher') == 'AES-128-CBC' ? 16 : 32);
-			session(['client.encrpted.aes' => $key]);
-			session()->save();
-		}
-		return $key;
+		return $this->makePrivateRsa()->decrypt($value);
 	}
 
-	public function getRsaKeys($key = null)
+	public function encryptPublicRsa(string $value)
 	{
-		$keys = session('client.encrpted.rsa');
-		if (empty($keys)) {
-			$rsa = new RSA;
-			$_keys = $rsa->createKey(2048);
-			session(['client.encrpted.rsa' => $keys]);
-			session()->save();
-		}
-		return is_null($key) ? $keys : $keys[$key];
+		return $this->makePublicRsa()->encrypt($value);
+	}
+	public function decryptPublicRsa(string $value)
+	{
+		return $this->makePublicRsa()->decrypt($value);
 	}
 
-	public function getRsaPublicKey()
+	public function encryptAes(string $value, string $aesKey = null)
 	{
-		return $this->getRsaKeys('publickey');
+		$e = new Encrypter($aesKey ?? $this->aesKey, config('app.cipher'));
+
+		return $e->encrypt($value, false);
 	}
 
-	public function getRsaPrivateKey()
+	public function decryptAes(string $value, string $iv, string $mac, string $aesKey = null)
 	{
-		return $this->getRsaKeys('privatekey');
+		$e = new Encrypter($aesKey ?? $this->aesKey, config('app.cipher'));
+
+		return $e->decrypt(compact('value', 'iv', 'mac'), false);
+	}
+
+	private function encryptAesToRaw(string $value, string $aesKey = null)
+	{
+		$aes = [
+			'iv' => '',
+			'mac' => '',
+			'key' => $aesKey ?? $this->generateAesKey()
+		];
+
+		$encoded = $this->encryptAes($value, $aes['key']);
+
+		$aes['iv'] = $encoded['iv'];
+		$aes['mac'] = $encoded['mac'];
+		$aes['key'] = base64_encode($aes['key']);
+
+		$aesBase64 = json_encode($aes, JSON_PARTIAL_OUTPUT_ON_ERROR);
+
+		return ['aesBase64' => $aesBase64, 'value' => $encoded['value']];
+	}
+
+	private function decryptAesFromRaw(string $value, string $decoded)
+	{
+		$aes = json_decode($decoded, true);
+		$aes['key'] = base64_decode($aes['key']);
+
+		return $this->decryptAes(base64_decode($value), $aes['iv'], $aes['mac'], $aes['key']);
+	}
+
+	public function generateAesKey()
+	{
+		return $this->aesKey = Encrypter::generateKey(config('app.cipher'));
+	}
+
+	public function generateRsaKeys()
+	{
+		$rsa = new RSA;
+		$rsaKeys = $rsa->createKey(2048);
+
+		$this->publicKey = $rsaKeys['publickey'];
+		$this->privateKey = $rsaKeys['privatekey'];
+
+		return $rsaKeys;
 	}
 
 }

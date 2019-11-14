@@ -40,7 +40,7 @@ trait CacheTrait {
 		$min = $index;
 		$max = $min + 1;
 		$key = $model->getTable().','.$min.'-'.$max;
-		return Cache::remember($key, config('cache.ttl'), function() use($min, $max, $keyName){ // 7 days
+		return Cache::remember($key, config('cache.ttl'), function() use($min, $max, $keyName){ // 1 days
 			$models = static::where($keyName, '>=', $min * 100)->where($keyName, '<', $max * 100)->get();
 			return $models->mapWithKeys(function($model, $key){
 				return [$model->getKey() => $model->getAttributes()];

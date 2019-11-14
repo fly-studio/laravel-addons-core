@@ -3,12 +3,11 @@
 namespace Addons\Core\Events;
 
 use Illuminate\Broadcasting\Channel;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -20,7 +19,7 @@ use Addons\Core\Contracts\Events\ControllerEvent as ControllerEventContract;
 class ControllerEvent implements ControllerEventContract
 {
 	use InteractsWithSockets;
-    use SerializesAndRestoresModelIdentifiers;
+    use SerializesModels;
 
     private $controller;
     private $method;

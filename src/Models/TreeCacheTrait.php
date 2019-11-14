@@ -7,6 +7,8 @@ use Addons\Core\Tools\TreeCollection;
 
 trait TreeCacheTrait {
 
+	public static $treeCache = [];
+
 	protected static function bootTreeCacheTrait()
 	{
 		/*
@@ -19,23 +21,34 @@ trait TreeCacheTrait {
 		});
 		*/
 		static::deleted(function($model) {
-			Cache::forget($model->getTable().'-all-data');
+			$table = $model->getTable();
+			Cache::forget($table.'-all-data');
+			unset(static::$treeCache[$table]);
 		});
 		static::saved(function($model) {
-			Cache::forget($model->getTable().'-all-data');
+			$table = $model->getTable();
+			Cache::forget($table.'-all-data');
+			unset(static::$treeCache[$table]);
 		});
 		if (method_exists(static::class, 'restored'))
 			static::restored(function($model){
-				Cache::forget($model->getTable().'-all-data');
+				$table = $model->getTable();
+				Cache::forget($table.'-all-data');
+				unset(static::$treeCache[$table]);
 			});
 	}
 
 	public static function getTreeCache()
 	{
 		$model = new static();
-		$hashKey = $model->getTable().'-all-data';
+		$table = $model->getTable();
 
-		return Cache::remember($hashKey, config('cache.ttl'), function() use ($model) {
+		if (isset(static::$treeCache[$table]))
+			return static::$treeCache[$table];
+
+		$hashKey = $table.'-all-data';
+
+		return static::$treeCache[$table] = Cache::remember($hashKey, config('cache.ttl'), function() use ($model) {
 
 			$builder = static::where($model->getKeyName(), '!=', 0);
 			!empty($model->getOrderKeyName()) && $builder->orderBy($model->getOrderKeyName());

@@ -2,15 +2,15 @@
 
 namespace Addons\Core\Http\Response;
 
+use Illuminate\Support\Arr;
 use Addons\Core\Tools\OutputEncrypt;
+use Addons\Core\Contracts\Protobufable;
 use Addons\Core\Http\Response\TextResponse;
 
-class ApiResponse extends TextResponse {
+class ApiResponse extends TextResponse implements Protobufable {
 
 	protected $result = 'api';
 	private $encrypted = false;
-	private $encryptedKey = null;
-	protected $outputRaw = false;
 
 	public function getFormatter()
 	{
@@ -30,18 +30,28 @@ class ApiResponse extends TextResponse {
 		return null;
 	}
 
-	public function setData($data, $encrypted = false)
+	public function setData($data, $rsaKey = false, $rsaType = 'public')
 	{
-		$data = json_decode(json_encode($data), true); //turn Object to Array
-		$this->encrypted = $encrypted;
-		$this->data = $data;
-
-		if ($encrypted)
+		if (!empty($rsaKey))
 		{
-			$encrypt = new OutputEncrypt;
-			$this->encryptedKey = $encrypt->getClientEncryptedKey();
-			$this->data = empty($this->encryptedKey) ? null : $encrypt->encode($data); //如果key不对,就不用耗费资源加密了
+			$rsaKey = is_string($rsaKey) ? $rsaKey : urldecode(request()->header('X-RSA'));
+
+			$encryptor = $rsaType == 'public' ? new OutputEncrypt($rsaKey) : new OutputEncrypt(null, $rsaKey);
+
+			$data = json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR);
+
+			$encoded = $rsaType == 'public' ? $encryptor->encodeByPublic($data) : $encryptor->encodeByPrivate($data);
+
+			$this->encrypted = $encoded['aesEncrypted'];
+
+			$this->data = $encoded['value']; //如果无法加密成功，则不用返回数据，避免浪费传输
+
+		} else {
+			$this->encrypted = null;
+
+			$this->data = json_decode(json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR), true); //turn Object to Array
 		}
+
 		return $this;
 	}
 
@@ -50,14 +60,25 @@ class ApiResponse extends TextResponse {
 		return $this->encrypted;
 	}
 
-	public function getEncryptedKey()
-	{
-		return $this->encryptedKey;
-	}
-
 	public function getOutputData()
 	{
-		return ['encrypted' => $this->getEncrypted() ? ($this->getEncryptedKey() ?: true) : false]  + array_except(parent::getOutputData(), ['tipType', 'message']);
+		$encrypted = $this->getEncrypted();
+		$data = Arr::except(parent::getOutputData(), ['tipType', 'message']);
+
+		if (!empty($encrypted))
+			return ['encrypted' => $encrypted, 'data' => $data['data']] + $data;
+
+		return $data;
+	}
+
+	public function toProtobuf(): \Google\Protobuf\Internal\Message
+	{
+		$message = parent::toProtobuf();
+
+		if (!empty($this->getEncrypted()))
+			$message->setEncrypted($this->getEncrypted());
+
+		return $message;
 	}
 
 }

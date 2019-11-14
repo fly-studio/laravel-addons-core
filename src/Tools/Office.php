@@ -20,7 +20,7 @@ class Office {
 		});
 		$sheet->fromArray($data);
 
-		$filepath == TRUE && $filepath = tempnam(storage_path('utils'),'excel');
+		$filepath == TRUE && $filepath = tempnam(utils_path('files'), 'excel-');
 		@chmod($filepath, 0777);
 		switch (strtolower($ext)) {
 			case 'xlsx':

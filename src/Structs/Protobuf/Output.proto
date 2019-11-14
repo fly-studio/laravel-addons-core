@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+//package Addons.Core.Structs.Protobuf;
+option java_package = "org.fly.core.text.lp.result";
+
+message EncryptKey {
+	bytes key = 1;
+	bytes iv = 2;
+	bytes mac = 3;
+}
+
+message OutputMessage {
+	string title = 1;
+	string content = 2;
+}
+
+message OutputTipType {
+	string type = 1;
+	uint32 timeout = 2;
+	string url = 3;
+}
+
+message Output {
+	string result = 1; //结果
+	uint32 status_code = 2; //状态码
+	uint64 uid = 3; //用户UID
+	bool debug = 4; //是否DEBUG
+	OutputMessage message = 5; //返回消息
+	OutputTipType tipType = 6; //客户端提示类型
+	bytes data = 7; // 数据 JSON
+	uint64 time = 8; // 当前时间
+	float duration = 9; // 执行时长
+	string body = 10; // 原BODY
+	bytes encrypted = 11; // KEY
+}

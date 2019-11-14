@@ -3,6 +3,7 @@
 namespace Addons\Core\Models;
 
 use DB;
+use Illuminate\Support\Arr;
 
 trait TreeTrait{
 
@@ -43,8 +44,8 @@ trait TreeTrait{
 			}
 		}
 
-		$result = array_except($items, $ids);
-		return count($result) === 1 ? array_get(array_pop($result), 'children', []) : $result;
+		$result = Arr::except($items, $ids);
+		return count($result) === 1 ? Arr::get(array_pop($result), 'children', []) : $result;
 	}
 
 	/**

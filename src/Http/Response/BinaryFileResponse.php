@@ -94,31 +94,35 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 		}
 		else
 		{
-			switch (substr($_SERVER['SERVER_SOFTWARE'], 0, (int)strpos($_SERVER['SERVER_SOFTWARE'],'/'))) {
-				case 'nginx':
-					$path = str_replace(['/./', '//'], ['/', '/'], rtrim(config('session.path'), '\\/').'/'.relative_path($this->file->getPathname(), base_path()));
-					$this->headers->set('X-Accel-Redirect', $path);
-					$this->headers->set('X-Accel-Buffering', 'no');
-					//$this->headers->set('X-Accel-Limit-Rate', '102400'); //速度限制 Byte/s
-					//$this->headers('Accept-Ranges', 'none');//单线程 限制多线程
-					$this->maxlen = 0;
-					break;
-				case 'Apache':
-					if (function_exists('apache_get_modules') && in_array('mod_xsendfile', apache_get_modules()))
-					{
-						$this->headers->set('X-Sendfile', $this->file->getPathname());
+			if (isset($_SERVER['SERVER_SOFTWARE']))
+			{
+				switch (substr($_SERVER['SERVER_SOFTWARE'], 0, (int)strpos($_SERVER['SERVER_SOFTWARE'],'/'))) {
+					case 'nginx':
+						$path = str_replace(['/./', '//'], ['/', '/'], rtrim(config('session.path'), '\\/').'/'.relative_path($this->file->getPathname(), public_path()));
+						$this->headers->set('X-Accel-Redirect', $path);
+						$this->headers->set('X-Accel-Buffering', 'no');
+						//$this->headers->set('X-Accel-Limit-Rate', '102400'); //速度限制 Byte/s
+						//$this->headers('Accept-Ranges', 'none');//单线程 限制多线程
 						$this->maxlen = 0;
-					}
-					break;
-				case 'squid':
-					$this->headers->set('X-Accelerator-Vary', $this->file->getPathname());
-					$this->maxlen = 0;
-					break;
-				case 'lighttpd':
-					$this->headers->set('X-LIGHTTPD-send-file', $this->file->getPathname());
-					$this->maxlen = 0;
-					break;
+						break;
+					case 'Apache':
+						if (function_exists('apache_get_modules') && in_array('mod_xsendfile', apache_get_modules()))
+						{
+							$this->headers->set('X-Sendfile', $this->file->getPathname());
+							$this->maxlen = 0;
+						}
+						break;
+					case 'squid':
+						$this->headers->set('X-Accelerator-Vary', $this->file->getPathname());
+						$this->maxlen = 0;
+						break;
+					case 'lighttpd':
+						$this->headers->set('X-LIGHTTPD-send-file', $this->file->getPathname());
+						$this->maxlen = 0;
+						break;
+				}
 			}
+
 
 		}
 		return $this;

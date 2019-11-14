@@ -6,6 +6,7 @@ use Closure;
 use ArrayAccess;
 use JsonSerializable;
 use BadMethodCallException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Support\Jsonable;
@@ -56,7 +57,7 @@ class TreeNode implements ArrayAccess, JsonSerializable, Jsonable, Arrayable {
 	}
 
 	public function childSet($key, array $value) {
-		return $this->children[$key] = new static(array_except($value, 'children'));
+		return $this->children[$key] = new static(Arr::except($value, 'children'));
 	}
 
 	public function childGet($key) {
@@ -90,7 +91,7 @@ class TreeNode implements ArrayAccess, JsonSerializable, Jsonable, Arrayable {
 	{
 		if (is_null($attributes)) return $this->items;
 
-		$this->items = array_except($attributes, 'children');
+		$this->items = Arr::except($attributes, 'children');
 		return $this;
 	}
 
@@ -125,7 +126,7 @@ class TreeNode implements ArrayAccess, JsonSerializable, Jsonable, Arrayable {
 
 	public function offsetGet($key)
 	{
-		return $key == 'children' ? $this->children : array_get($this->items, $key);
+		return $key == 'children' ? $this->children : Arr::get($this->items, $key);
 	}
 
 	public function offsetSet($key, $value)

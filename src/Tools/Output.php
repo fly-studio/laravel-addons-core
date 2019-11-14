@@ -7,7 +7,7 @@ class Output {
 
 	public static function js($data)
 	{
-		return 'var RESULT = '.json_encode($data).';if (self != parent) parent.RESULT = self.RESULT;';
+		return 'var RESULT = '.json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR).';if (self != parent) parent.RESULT = self.RESULT;';
 	}
 
 	public static function text($data)
@@ -23,7 +23,7 @@ class Output {
 
 	public static function xml($data)
 	{
-		$data = json_decode(json_encode($data), true);
+		$data = json_decode(json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR), true);
 		return xml_encode($data);
 	}
 
