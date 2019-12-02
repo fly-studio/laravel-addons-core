@@ -1,6 +1,6 @@
 <?php
 
-namespace Addons\Core\Http\Response;
+namespace Addons\Core\Http\Output\Response;
 
 use Lang, Auth;
 use JsonSerializable;
@@ -13,10 +13,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Addons\Core\Contracts\Protobufable;
 use Illuminate\Contracts\Support\Jsonable;
+use Addons\Core\Http\Output\ActionFactory;
 use Illuminate\Contracts\Support\Arrayable;
-use Addons\Core\Http\Output\TipTypeManager;
 use Symfony\Component\HttpFoundation\Request;
-use Addons\Core\Contracts\Http\Output\TipType;
 
 use Addons\Core\Structs\Protobuf\Output as OutputProto;
 use Addons\Core\Structs\Protobuf\OutputMessage as MessageProto;
@@ -26,117 +25,29 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 
 	protected $request = null;
 	protected $data = null;
-	protected $formatter = 'auto';
+	protected $of = 'auto';
 	protected $message = null;
-	protected $tipType = null;
-	protected $result = 'success';
-	protected $outputRaw = false;
-	protected $disableUser = false;
+	protected $action = null;
+	protected $uid = null;
+	protected $code = 0;
 
-	public function setRequest($request)
-	{
-		$this->request = $request;
-		return $this;
-	}
-
-	public function getRequest()
-	{
-		return is_null($this->request) ? app('request') : $this->request;
-	}
-
-	public function disableUser($disabled)
-	{
-		$this->disableUser = $disabled;
-		return $this;
-	}
-
-	public function setResult($result)
-	{
-		$this->result = $result;
-		return $this;
-	}
-
-	public function getResult()
-	{
-		return $this->result;
-	}
-
-	public function setFormatter($formatter)
-	{
-		$this->formatter = $formatter;
-		return $this;
-	}
-
-	public function getFormatter()
-	{
-		if ($this->formatter == 'auto')
-		{
-			$request = $this->getRequest();
-			$route = $request->route();
-			$of = $request->input('of', null);
-			if (!in_array($of, ['txt', 'text', 'json', 'xml', 'yaml', 'html']))
-				$of = $request->expectsJson() || (!empty($route) && in_array('api', $route->gatherMiddleware())) ? 'json' : 'html';
-			return $of;
-		}
-		return $this->formatter;
-	}
-
-	public function setAutoTip($tip)
-	{
-		return $this->setTipType(app(TipTypeManager::class)->autoDriver($tip));
-	}
-
-	public function setTipType(TipType $tipType)
-	{
-		$this->tipType = $tipType;
-		return $this;
-	}
-
-	public function getTipType()
-	{
-		//default tipType
-		if (is_null($this->tipType))
-		{
-			switch ($this->getResult()) {
-				case 'success':
-					return app(TipTypeManager::class)->autoDriver(true);
-				case 'failure':
-				case 'error':
-				case 'notice':
-				case 'warning':
-					return app(TipTypeManager::class)->autoDriver(false);
-				case 'api':
-				default:
-					return app(TipTypeManager::class)->driver();
-			}
-		}
-		return $this->tipType;
-	}
-
-	public function setData($data, $outputRaw = false)
+	public function data($data)
 	{
 		$data = json_decode(json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR), true); //turn Object to Array
-		//
+
 		$this->data = $data;
-		$this->outputRaw = $outputRaw;
 		return $this;
 	}
 
-	public function getData()
-	{
-		return $this->data;
-	}
-
-	public function setMessage($message_name, $transData = [])
+	public function message(?string $message_name, array $transData = null)
 	{
 		if (empty($message_name))
 		{
 			$this->message = null;
 			return $this;
 		}
-		if (is_array($message_name))
-			$message = $message_name;
-		else if (Lang::has($message_name))
+
+		if (Lang::has($message_name))
 			$message = trans($message_name);
 		else if (strpos($message_name, '::') === false && Lang::has('core::common.'.$message_name))
 			$message = trans('core::common.'.$message_name);
@@ -153,24 +64,104 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 			else
 				$message = $this->makeReplacements($message, $transData);
 		}
+
+		$this->message = $message;
+
+		return $this;
+	}
+
+	public function rawMessage($message)
+	{
 		$this->message = $message;
 		return $this;
 	}
 
-	public function setRawMessage($message)
+	public function action(...$action)
 	{
-		$this->message = $message;
+		$this->action = (new ActionFactory())->make(...$action);
 		return $this;
+	}
+
+	public function code(int $code)
+	{
+		$this->code = $code;
+
+		/*if ($code >= 100 && $code < 600)
+			$this->setStatusCode($code, $text);*/
+
+		return $this;
+	}
+
+	public function request(?Request $request)
+	{
+		$this->request = $request;
+		return $this;
+	}
+
+	public function uid(?int $uid)
+	{
+		$this->uid = $uid;
+		return $this;
+	}
+
+	public function of(?string $of)
+	{
+		$this->of = $of;
+		return $this;
+	}
+
+	public function getRequest()
+	{
+		return is_null($this->request) ? app('request') : $this->request;
+	}
+
+	public function getOf()
+	{
+		if ($this->of == 'auto')
+		{
+			$request = $this->getRequest();
+			$route = $request->route();
+			$of = $request->query('of', null);
+
+			if (!in_array($of, ['txt', 'text', 'json', 'xml', 'yaml', 'html']))
+				$of = $request->expectsJson() || (!empty($route) && in_array('api', $route->gatherMiddleware())) ? 'json' : 'html';
+
+			return $of;
+		}
+
+		return $this->formatter;
+	}
+
+	public function getData()
+	{
+		return $this->data;
+	}
+
+	public function getCode()
+	{
+		return $this->code;
 	}
 
 	public function getMessage()
 	{
-		$code = $this->getStatusCode();
-		return empty($this->message) ? (
-			$code != 200 && Lang::has('exception.http.'.$code) ? trans('exception.http.'.$code) : (
-				Lang::has('default.' . $this->getResult() ) ? trans('default.' . $this->getResult()) : trans('core::common.default.' . $this->getResult())
-			)
-		) : $this->message;
+		if (empty($this->message))
+		{
+			$code = $this->getStatusCode();
+
+			if ($code != Response::HTTP_OK)
+			{
+				return Lang::has('exception.http.'.$code) ? trans('exception.http.'.$code) : trans('core::common.default.error');
+			} else {
+				return trans('core::common.default.sucess');
+			}
+		}
+
+		return $this->message;
+	}
+
+	public function getAction()
+	{
+		return $this->action;
 	}
 
 	public function getOutputData()
@@ -181,11 +172,12 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 	public function prepare(Request $request)
 	{
 		$data = $this->getOutputData();
+
 		$charset = config('app.charset');
-		$callback = $request->query('callback'); //必须是GET请求，以免和POST字段冲突
-		$of = $this->getFormatter();
+		$of = $this->getOf();
 		$response = null;
 		$original = $this->original;
+
 		switch ($of) {
 			case 'xml':
 			case 'txt':
@@ -193,14 +185,25 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 			case 'yaml':
 			case 'html': //text
 				$content = $of != 'html' ? Output::$of($data) : view('tips', ['_data' => $data]);
-				$response = $this->setContent($content)->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
+
+				$response = $this->setContent($content)
+					->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
+
 				break;
 			default: //其余全部为json
-				$jsonResponse = (new JsonResponse($data, $this->getStatusCode(), [], JSON_PARTIAL_OUTPUT_ON_ERROR))->withCallback($callback);
-				$response = $this->setContent($jsonResponse->getContent())->withHeaders($jsonResponse->headers->all())->header('Content-Type', 'application/json');
+
+				$jsonResponse = (new JsonResponse($data, $this->getStatusCode(), [], JSON_PARTIAL_OUTPUT_ON_ERROR))
+					->withCallback($request->query('callback')); //pajax 必须是GET请求，以免和POST字段冲突
+
+				$response = $this->setContent($jsonResponse->getContent())
+					->withHeaders($jsonResponse->headers->all())
+					->header('Content-Type', 'application/json');
+
 				break;
 		}
+
 		$this->original = $original;
+
 		return $response;
 	}
 
@@ -223,7 +226,7 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 
 		$o = new OutputProto();
 		$o->setResult($data['result']);
-		$o->setStatusCode($data['status_code']);
+		$o->setCode($data['status_code']);
 		!empty($data['uid']) && $o->setUid($data['uid']);
 		$o->setDebug($data['debug']);
 
@@ -259,18 +262,22 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 
 	public function toArray()
 	{
-		$result = $this->outputRaw ? $this->getData() : [
-			'result' => $this->getResult(),
-			'status_code' => $this->getStatusCode(),
-			'uid' => $this->disableUser ? null : (Auth::check() ? Auth::user()->getKey() : null),
-			'debug' => config('app.debug'),
+		$result = [
+			'code' => $this->getCode(),
 			'message' => $this->getMessage(),
-			'tipType' => $this->getTipType(),
+			'action' => $this->getAction(),
 			'data' => $this->getData(),
-			'time' => time(),
-			'duration' => microtime(true) - LARAVEL_START,
-			'body' => strval($this->original),
+			'uid' => $this->uid ? null : (Auth::check() ? Auth::user()->getKey() : null),
+			'at' => microtime(true),
 		];
+
+		if (config('app.debug')) {
+			$result += [
+				'duration' => microtime(true) - LARAVEL_START,
+				'body' => strval($this->original),
+			];
+		}
+
 		return $result;
 	}
 

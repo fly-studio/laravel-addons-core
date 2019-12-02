@@ -7,22 +7,8 @@ use JsonSerializable;
 use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Arrayable;
 
-abstract class TipType implements JsonSerializable, ArrayAccess, Arrayable
+abstract class Action implements JsonSerializable, ArrayAccess, Arrayable
 {
-
-	protected $timeout = null;
-	protected $type = null;
-
-	public function setTimeout($timeout)
-	{
-		$this->timeout = $timeout;
-		return $this;
-	}
-
-	public function getTimeout()
-	{
-		return is_null($this->timeout) ? config('output.tipTypes.'.$this->type.'.timeout') : $this->timeout;
-	}
 
 	abstract public function jsonSerialize();
 

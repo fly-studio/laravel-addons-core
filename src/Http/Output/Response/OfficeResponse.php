@@ -1,27 +1,27 @@
 <?php
 
-namespace Addons\Core\Http\Response;
+namespace Addons\Core\Http\Output\Response;
 
 use Addons\Core\File\Mimes;
 use Addons\Core\Tools\Office;
-use Addons\Core\Http\Response\TextResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Addons\Core\Http\Output\Response\TextResponse;
 
 class OfficeResponse extends TextResponse {
 
-	//protected $type = 'office';
-
-	public function getFormatter()
+	public function getOf()
 	{
-		if ($this->formatter == 'auto')
+		if ($this->of == 'auto')
 		{
 			$request = app('request');
 			$of = $request->input('of', null);
 			if (!in_array($of, ['csv', 'xls', 'xlsx']))
 				$of = 'xlsx';
+
 			return $of;
 		}
-		return $this->formatter;
+
+		return $this->of;
 	}
 
 	public function getOutputData()
@@ -32,16 +32,21 @@ class OfficeResponse extends TextResponse {
 	public function prepare(Request $request)
 	{
 		$data = $this->getOutputData();
-		$of = $this->getFormatter();
+		$of = $this->getOf();
 		$response = null;
+
 		switch ($of) {
 			case 'csv':
 			case 'xls':
 			case 'xlsx':
 				$filename = Office::$of($data);
-				$response = response()->download($filename, date('YmdHis').'.'.$of, ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)])->deleteFileAfterSend(true)->setStatusCode($this->getStatusCode());
+
+				$response = response()->download($filename, date('YmdHis').'.'.$of, ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)])
+					->deleteFileAfterSend(true)
+					->setStatusCode($this->getStatusCode());
 				break;
 		}
+
 		return $response;
 	}
 

@@ -20,16 +20,19 @@ trait TreeCacheTrait {
 			Cache::forget($model->getTable().'-all-data')
 		});
 		*/
+
 		static::deleted(function($model) {
 			$table = $model->getTable();
 			Cache::forget($table.'-all-data');
 			unset(static::$treeCache[$table]);
 		});
+
 		static::saved(function($model) {
 			$table = $model->getTable();
 			Cache::forget($table.'-all-data');
 			unset(static::$treeCache[$table]);
 		});
+
 		if (method_exists(static::class, 'restored'))
 			static::restored(function($model){
 				$table = $model->getTable();

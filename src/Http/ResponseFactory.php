@@ -1,4 +1,5 @@
 <?php
+
 namespace Addons\Core\Http;
 
 use Illuminate\Support\Str;

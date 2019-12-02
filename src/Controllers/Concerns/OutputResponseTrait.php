@@ -3,44 +3,47 @@
 namespace Addons\Core\Controllers\Concerns;
 
 use BadMethodCallException;
-use Addons\Core\Http\OutputResponseFactory;
+use Addons\Core\Http\Output\ResponseFactory;
 use Addons\Core\Exceptions\OutputResponseException;
 
+/**
+ * Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException	403
+ * Symfony\Component\HttpKernel\Exception\BadRequestHttpException	400
+ * Symfony\Component\HttpKernel\Exception\ConflictHttpException	409
+ * Symfony\Component\HttpKernel\Exception\GoneHttpException	410
+ * Symfony\Component\HttpKernel\Exception\HttpException	500
+ * Symfony\Component\HttpKernel\Exception\LengthRequiredHttpException	411
+ * Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException	405
+ * Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException	406
+ * Symfony\Component\HttpKernel\Exception\NotFoundHttpException	404
+ * Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException	412
+ * Symfony\Component\HttpKernel\Exception\PreconditionRequiredHttpException	428
+ * Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException	503
+ * Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException	429
+ * Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException	401
+ * Symfony\Component\HttpKernel\Exception\UnsupportedMediaTypeHttpException	415
+ */
 trait OutputResponseTrait {
 
-	protected $outputTable = [
-		'error_param' => 'server.error_param',
-		'success_login' => 'auth.success_login',
-		'success_logout' => 'auth.success_logout',
-		'failure_login' => 'auth.failure_login',
-		'failure_notexists' => 'document.not_exists',
-		'failure_owner' => 'document.owner_deny',
-	];
-
-	public function __call($method, $parameters)
+	public function api($data, $encrypted = false, string $rsaType = 'public')
 	{
-		list($result) = explode('_', $method);
-		//$this->api($data, $encrypted = false);
-		//$this->office($data);
-		if (in_array($result, ['api', 'office']))
-		{
-			return app(OutputResponseFactory::class)->make($result, ...$parameters);
-		}
-		// $this->success($message_name = null, $tipType = true, $data = [], $showData = true);
-		// $this->failure,notice,warning($message_name = null, $tipType = false, $data = [], $showData = false);
-		// $this->error_param($tipType = false, $data = [], $showData = false);
-		// $this->success_login($tipType = true, $data = [], $showData = true);
-		else if (in_array($result, ['error', 'failure', 'success', 'notice', 'warning']))
-		{
-			//将message_name入栈
-			if ($method != $result)
-				array_unshift($parameters, isset($this->outputTable[$method]) ? $this->outputTable[$method] : $method);
+		return app(ResponseFactory::class)->make('api', ...func_get_args());
+	}
 
-			//抛出成功或失败
-			$response = app(OutputResponseFactory::class)->make($result, ...$parameters)->disableUser($this->disableUser);
-			throw new OutputResponseException($response);
-		}
+	public function office(?array $data)
+	{
+		return app(ResponseFactory::class)->make('office', ...func_get_args());
+	}
 
-		throw new BadMethodCallException("Method [{$method}] does not exist.");
+	public function success(string $messageName = null, $data = null)
+	{
+		return app(ResponseFactory::class)->make('success', ...func_get_args());
+	}
+
+	public function error(string $messageName = null, $data = null)
+	{
+		return app(ResponseFactory::class)->make('error', ...func_get_args());
+		//抛出失败，终止运行，因为需要返回一个response做链式的修改，所以抛出异常的方式废止
+		//throw new OutputResponseException($response);
 	}
 }

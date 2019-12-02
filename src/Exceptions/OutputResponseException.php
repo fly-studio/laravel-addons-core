@@ -2,75 +2,56 @@
 
 namespace Addons\Core\Exceptions;
 
-use RuntimeException;
-use Addons\Core\Http\Response\TextResponse;
+use Addons\Core\Http\Output\ResponseFactory;
+use Addons\Core\Http\Output\Response\TextResponse;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class OutputResponseException extends HttpResponseException {
 
-	public function __construct($message_name = null, $result = 'failure')
+	public function __construct($messageNameOrInstance = null)
 	{
-		if ($message_name instanceof TextResponse) {
-			$this->response = $message_name;
-		} else {
-			$this->response = new TextResponse;
-			!empty($message_name) && $this->setMessage($message_name);
-			$this->setResult($result);
-		}
+		$this->response = $messageNameOrInstance instanceof TextResponse ? $messageNameOrInstance : app(ResponseFactory::class)->error($messageNameOrInstance);
 	}
 
-	public function setHeaders($headers)
+	public function headers($headers)
 	{
 		$this->response->setHeaders($headers);
 		return $this;
 	}
 
-	public function setRequest($request)
+	public function request($request)
 	{
-		$this->response->setRequest($request);
+		$this->response->request($request);
 		return $this;
 	}
 
-	public function setResult($result)
+	public function code(int $code, $text = null)
 	{
-		$this->response->setResult($result);
+		$this->response->code($code, $text);
 		return $this;
 	}
 
-	public function setStatusCode($code)
+	public function of(string $of)
 	{
-		$this->response->setStatusCode($code);
+		$this->response->of($of);
 		return $this;
 	}
 
-	public function setFormatter($formatter)
+	public function data($data)
 	{
-		$this->response->setFormatter($formatter);
+		$this->response->data($data);
 		return $this;
 	}
 
-	public function setUrl($url)
+	public function message(string $messageName, array $transData = [])
 	{
-		$this->response->setUrl($url);
+		$this->response->message($messageName, $transData);
 		return $this;
 	}
 
-	public function setData($data, $outputRaw = false)
+	public function rawMessage($message)
 	{
-		$this->response->setData($data, $outputRaw);
-		return $this;
-	}
-
-	public function setMessage($message_name, $transData = [])
-	{
-		$this->response->setMessage($message_name, $transData);
-		return $this;
-	}
-
-	public function setRawMessage($message)
-	{
-		$this->response->setRawMessage($message);
+		$this->response->rawMessage($message);
 		return $this;
 	}
 }

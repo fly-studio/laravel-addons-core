@@ -1,28 +1,30 @@
 <?php
 
-namespace Addons\Core\Http\Response;
+namespace Addons\Core\Http\Output\Response;
 
 use Illuminate\Support\Arr;
 use Addons\Core\Tools\OutputEncrypt;
 use Addons\Core\Contracts\Protobufable;
-use Addons\Core\Http\Response\TextResponse;
+use Addons\Core\Http\Output\Response\TextResponse;
 
 class ApiResponse extends TextResponse implements Protobufable {
 
-	protected $result = 'api';
 	private $encrypted = false;
 
-	public function getFormatter()
+	public function getOf()
 	{
-		if ($this->formatter == 'auto')
+		if ($this->of == 'auto')
 		{
 			$request = app('request');
 			$of = $request->input('of', null);
+
 			if (!in_array($of, ['txt', 'text', 'json', 'xml', 'yaml']))
 				$of = '';
+
 			return $of;
 		}
-		return $this->formatter;
+
+		return $this->of;
 	}
 
 	public function getMessage()
@@ -30,7 +32,7 @@ class ApiResponse extends TextResponse implements Protobufable {
 		return null;
 	}
 
-	public function setData($data, $rsaKey = false, $rsaType = 'public')
+	public function data($data, $rsaKey = false, $rsaType = 'public')
 	{
 		if (!empty($rsaKey))
 		{
@@ -63,7 +65,7 @@ class ApiResponse extends TextResponse implements Protobufable {
 	public function getOutputData()
 	{
 		$encrypted = $this->getEncrypted();
-		$data = Arr::except(parent::getOutputData(), ['tipType', 'message']);
+		$data = Arr::except(parent::getOutputData(), ['action', 'message']);
 
 		if (!empty($encrypted))
 			return ['encrypted' => $encrypted, 'data' => $data['data']] + $data;

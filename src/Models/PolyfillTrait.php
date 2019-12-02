@@ -154,6 +154,10 @@ trait PolyfillTrait {
 					if (method_exists($this, $method))
 						$data[$key] = call_user_func([$this, $method], $data[$key], $key, $value);
 				}
+
+				if ($data[$key] instanceof Arrayable) {
+					$data[$key] = $data[$key]->toArray($options);
+				}
 			}
 		}
 
