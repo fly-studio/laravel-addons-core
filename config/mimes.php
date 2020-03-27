@@ -862,4 +862,6 @@ return [
 	'smv' => ['video/x-smv'],
 	'ice' => ['x-conference/x-cooltalk'],
 	'yaml' => ['application/x-yaml', 'text/x-yaml'],
+	'proto' => ['application/x-protobuf', 'application/protobuf', 'application/vnd.google.protobuf'],
+	'protobuf' => ['application/x-protobuf', 'application/protobuf', 'application/vnd.google.protobuf'],
 ];

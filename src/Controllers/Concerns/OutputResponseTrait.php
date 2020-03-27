@@ -25,7 +25,7 @@ use Addons\Core\Exceptions\OutputResponseException;
  */
 trait OutputResponseTrait {
 
-	public function api($data, $encrypted = false, string $rsaType = 'public')
+	public function api($data)
 	{
 		return app(ResponseFactory::class)->make('api', ...func_get_args());
 	}

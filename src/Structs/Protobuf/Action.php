@@ -9,26 +9,48 @@ use Google\Protobuf\Internal\RepeatedField;
 use Google\Protobuf\Internal\GPBUtil;
 
 /**
- * Generated from protobuf message <code>Addons.Core.Structs.Protobuf.OutputTipType</code>
+ * Generated from protobuf message <code>Addons.Core.Structs.Protobuf.Action</code>
  */
-class OutputTipType extends \Google\Protobuf\Internal\Message
+class Action extends \Google\Protobuf\Internal\Message
 {
     /**
      * Generated from protobuf field <code>string type = 1;</code>
      */
-    private $type = '';
+    protected $type = '';
     /**
      * Generated from protobuf field <code>uint32 timeout = 2;</code>
      */
-    private $timeout = 0;
+    protected $timeout = 0;
     /**
      * Generated from protobuf field <code>string url = 3;</code>
      */
-    private $url = '';
+    protected $url = '';
 
-    public function __construct() {
+    /**
+     * Constructor.
+     *
+     * @param array $data {
+     *     Optional. Data for populating the Message object.
+     *
+     *     @type string $type
+     *     @type int $timeout
+     *     @type string $url
+     * }
+     */
+    public function __construct($data = NULL) {
         \Addons\Core\Structs\Protobuf\GPBMetadata\Output::initOnce();
-        parent::__construct();
+        parent::__construct($data);
+    }
+
+    public static function make($type, $timeout = null, $url = null)
+    {
+        $action = new static;
+
+        $action->setType($type);
+        !is_null($timeout) && $action->setTimeout($timeout);
+        !is_null($url) && $action->setUrl($url);
+
+        return $action;
     }
 
     /**

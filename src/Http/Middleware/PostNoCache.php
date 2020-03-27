@@ -1,11 +1,11 @@
 <?php
 
-namespace Addons\Core\Middleware;
+namespace Addons\Core\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Response;
 
-class NoCache
+class PostNoCache
 {
 	/**
 	 * Handle an incoming request.
@@ -17,9 +17,10 @@ class NoCache
 	public function handle($request, Closure $next)
 	{
 		$response = $next($request);
-		
+
 		$response->headers->set('P3P','CP="CAO PSA OUR"');
-		if(in_array(strtoupper($request->method()), ['POST', 'PUT', 'DELETE'])){
+
+		if(in_array(strtoupper($request->method()), ['POST', 'PUT', 'DELETE'])) {
 			//header no cache when post
 			foreach([
 				'Expires' => '0',

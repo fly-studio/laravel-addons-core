@@ -16,19 +16,30 @@ class EncryptKey extends \Google\Protobuf\Internal\Message
     /**
      * Generated from protobuf field <code>bytes key = 1;</code>
      */
-    private $key = '';
+    protected $key = '';
     /**
      * Generated from protobuf field <code>bytes iv = 2;</code>
      */
-    private $iv = '';
+    protected $iv = '';
     /**
      * Generated from protobuf field <code>bytes mac = 3;</code>
      */
-    private $mac = '';
+    protected $mac = '';
 
-    public function __construct() {
+    /**
+     * Constructor.
+     *
+     * @param array $data {
+     *     Optional. Data for populating the Message object.
+     *
+     *     @type string $key
+     *     @type string $iv
+     *     @type string $mac
+     * }
+     */
+    public function __construct($data = NULL) {
         \Addons\Core\Structs\Protobuf\GPBMetadata\Output::initOnce();
-        parent::__construct();
+        parent::__construct($data);
     }
 
     /**
@@ -98,3 +109,4 @@ class EncryptKey extends \Google\Protobuf\Internal\Message
     }
 
 }
+

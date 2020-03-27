@@ -1,6 +1,6 @@
 <?php
 
-namespace Addons\Core\Middleware;
+namespace Addons\Core\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Response;

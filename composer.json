@@ -2,7 +2,7 @@
     "name": "addons/core",
     "description": "Laravel's Addons.",
     "homepage": "https://www.load-page.com/manuals",
-    "keywords": ["L5", "Laravel 5", "Laravel","Addons"],
+    "keywords": ["Laravel","Addons"],
     "license": "MIT",
     "support": {
         "issues": "https://github.com/fly-studio/larvel-addons-core/issues",

@@ -21,10 +21,10 @@ class ControllerEvent implements ControllerEventContract
 	use InteractsWithSockets;
     use SerializesModels;
 
-    private $controller;
-    private $method;
-    private $request;
-    private $response;
+    protected $controller;
+    protected $method;
+    protected $request;
+    protected $response;
 
     /**
      * Create a new controller event instance.
@@ -39,6 +39,7 @@ class ControllerEvent implements ControllerEventContract
     public function __construct(Controller $controller, $method, Request $request = null, $response = null)
     {
         $request = is_null($request) ? app('request') : $request;
+
         $this->controller = $controller;
         $this->method = $method;
         $this->request = (new SerializableRequest($request))->data();
@@ -65,6 +66,11 @@ class ControllerEvent implements ControllerEventContract
         return (new SerializableRequest)->invoke($this->request);
     }
 
+    public function getSerializedRequest()
+    {
+        return $this->request;
+    }
+
     public function getRoute($param = null)
     {
         $request = $this->getRequest();
@@ -74,6 +80,11 @@ class ControllerEvent implements ControllerEventContract
     public function getResponse()
     {
         return (new SerializableResponse)->invoke($this->response);
+    }
+
+    public function getSerializedResponse()
+    {
+        return $this->response;
     }
 
     /**

@@ -9,19 +9,24 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class Office {
 
-	public static function excel($data, $ext = 'xlsx', $filepath = TRUE)
+	public static function excel(array $data, string $ext = 'xlsx', string $filepath = null)
 	{
 		$excel = new Spreadsheet();
 		$excel->setActiveSheetIndex(0);
 		$sheet = $excel->getActiveSheet();
+
 		array_walk($data, function(&$v){
 			foreach ($v as $key => $value)
 				!is_scalar($value) && $v[$key] = @strval($value);
 		});
+
 		$sheet->fromArray($data);
 
-		$filepath == TRUE && $filepath = tempnam(utils_path('files'), 'excel-');
+		if (is_null($filepath))
+			$filepath = tempnam(utils_path('files'), 'excel-');
+
 		@chmod($filepath, 0777);
+
 		switch (strtolower($ext)) {
 			case 'xlsx':
 				$objWriter = new Xlsx($excel);
@@ -36,24 +41,25 @@ class Office {
 				# code...
 				break;
 		}
+
 		$objWriter->save($filepath);
-		//@unlink($filepath);
+
 		return $filepath;
 	}
 
-	public static function csv($data)
+	public static function csv(array $data, string $filepath = null)
 	{
-		return self::excel($data ,'csv');
+		return self::excel($data ,'csv', $filepath);
 	}
 
-	public static function xls($data)
+	public static function xls(array $data, string $filepath = null)
 	{
-		return self::excel($data ,'xls');
+		return self::excel($data ,'xls', $filepath);
 	}
 
-	public static function xlsx($data)
+	public static function xlsx(array $data, string $filepath = null)
 	{
-		return self::excel($data ,'xlsx');
+		return self::excel($data ,'xlsx', $filepath);
 	}
 
 }

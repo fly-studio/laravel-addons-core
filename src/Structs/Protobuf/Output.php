@@ -14,125 +14,139 @@ use Google\Protobuf\Internal\GPBUtil;
 class Output extends \Google\Protobuf\Internal\Message
 {
     /**
-     *结果
-     *
-     * Generated from protobuf field <code>string result = 1;</code>
-     */
-    private $result = '';
-    /**
      *状态码
      *
-     * Generated from protobuf field <code>uint32 status_code = 2;</code>
+     * Generated from protobuf field <code>uint32 code = 1;</code>
      */
-    private $status_code = 0;
+    protected $code = 0;
+    /**
+     *返回消息
+     *
+     * Generated from protobuf field <code>string message = 2;</code>
+     */
+    protected $message = '';
     /**
      *用户UID
      *
      * Generated from protobuf field <code>uint64 uid = 3;</code>
      */
-    private $uid = 0;
-    /**
-     *是否DEBUG
-     *
-     * Generated from protobuf field <code>bool debug = 4;</code>
-     */
-    private $debug = false;
-    /**
-     *返回消息
-     *
-     * Generated from protobuf field <code>.Addons.Core.Structs.Protobuf.OutputMessage message = 5;</code>
-     */
-    private $message = null;
+    protected $uid = 0;
     /**
      *客户端提示类型
      *
-     * Generated from protobuf field <code>.Addons.Core.Structs.Protobuf.OutputTipType tipType = 6;</code>
+     * Generated from protobuf field <code>.Addons.Core.Structs.Protobuf.Action action = 4;</code>
      */
-    private $tipType = null;
+    protected $action = null;
     /**
-     * 数据 JSON
+     * 数据 RAW or JSON
      *
-     * Generated from protobuf field <code>bytes data = 7;</code>
+     * Generated from protobuf field <code>bytes data = 5;</code>
      */
-    private $data = '';
+    protected $data = '';
     /**
      * 当前时间
      *
-     * Generated from protobuf field <code>uint64 time = 8;</code>
+     * Generated from protobuf field <code>uint64 at = 6;</code>
      */
-    private $time = 0;
+    protected $at = 0;
     /**
      * 执行时长
      *
-     * Generated from protobuf field <code>float duration = 9;</code>
+     * Generated from protobuf field <code>uint32 duration = 7;</code>
      */
-    private $duration = 0.0;
+    protected $duration = 0;
     /**
      * 原BODY
      *
-     * Generated from protobuf field <code>string body = 10;</code>
+     * Generated from protobuf field <code>string body = 8;</code>
      */
-    private $body = '';
+    protected $body = '';
     /**
      * KEY
      *
-     * Generated from protobuf field <code>bytes encrypted = 11;</code>
+     * Generated from protobuf field <code>bytes encrypted = 9;</code>
      */
-    private $encrypted = '';
+    protected $encrypted = '';
 
-    public function __construct() {
+    /**
+     * Constructor.
+     *
+     * @param array $data {
+     *     Optional. Data for populating the Message object.
+     *
+     *     @type int $code
+     *          状态码
+     *     @type string $message
+     *          返回消息
+     *     @type int|string $uid
+     *          用户UID
+     *     @type \Addons\Core\Structs\Protobuf\Action $action
+     *          客户端提示类型
+     *     @type string $data
+     *           数据 RAW or JSON
+     *     @type int|string $at
+     *           当前时间
+     *     @type int $duration
+     *           执行时长
+     *     @type string $body
+     *           原BODY
+     *     @type string $encrypted
+     *           KEY
+     * }
+     */
+    public function __construct($data = NULL) {
         \Addons\Core\Structs\Protobuf\GPBMetadata\Output::initOnce();
-        parent::__construct();
+        parent::__construct($data);
     }
 
     /**
-     *结果
+     *状态码
      *
-     * Generated from protobuf field <code>string result = 1;</code>
-     * @return string
+     * Generated from protobuf field <code>uint32 code = 1;</code>
+     * @return int
      */
-    public function getResult()
+    public function getCode()
     {
-        return $this->result;
+        return $this->code;
     }
 
     /**
-     *结果
+     *状态码
      *
-     * Generated from protobuf field <code>string result = 1;</code>
-     * @param string $var
+     * Generated from protobuf field <code>uint32 code = 1;</code>
+     * @param int $var
      * @return $this
      */
-    public function setResult($var)
+    public function setCode($var)
     {
-        GPBUtil::checkString($var, True);
-        $this->result = $var;
+        GPBUtil::checkUint32($var);
+        $this->code = $var;
 
         return $this;
     }
 
     /**
-     *状态码
+     *返回消息
      *
-     * Generated from protobuf field <code>uint32 status_code = 2;</code>
-     * @return int
+     * Generated from protobuf field <code>string message = 2;</code>
+     * @return string
      */
-    public function getStatusCode()
+    public function getMessage()
     {
-        return $this->status_code;
+        return $this->message;
     }
 
     /**
-     *状态码
+     *返回消息
      *
-     * Generated from protobuf field <code>uint32 status_code = 2;</code>
-     * @param int $var
+     * Generated from protobuf field <code>string message = 2;</code>
+     * @param string $var
      * @return $this
      */
-    public function setStatusCode($var)
+    public function setMessage($var)
     {
-        GPBUtil::checkUint32($var);
-        $this->status_code = $var;
+        GPBUtil::checkString($var, True);
+        $this->message = $var;
 
         return $this;
     }
@@ -164,87 +178,35 @@ class Output extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     *是否DEBUG
+     *客户端提示类型
      *
-     * Generated from protobuf field <code>bool debug = 4;</code>
-     * @return bool
+     * Generated from protobuf field <code>.Addons.Core.Structs.Protobuf.Action action = 4;</code>
+     * @return \Addons\Core\Structs\Protobuf\Action
      */
-    public function getDebug()
+    public function getAction()
     {
-        return $this->debug;
-    }
-
-    /**
-     *是否DEBUG
-     *
-     * Generated from protobuf field <code>bool debug = 4;</code>
-     * @param bool $var
-     * @return $this
-     */
-    public function setDebug($var)
-    {
-        GPBUtil::checkBool($var);
-        $this->debug = $var;
-
-        return $this;
-    }
-
-    /**
-     *返回消息
-     *
-     * Generated from protobuf field <code>.Addons.Core.Structs.Protobuf.OutputMessage message = 5;</code>
-     * @return \Addons\Core\Structs\Protobuf\OutputMessage
-     */
-    public function getMessage()
-    {
-        return $this->message;
-    }
-
-    /**
-     *返回消息
-     *
-     * Generated from protobuf field <code>.Addons.Core.Structs.Protobuf.OutputMessage message = 5;</code>
-     * @param \Addons\Core\Structs\Protobuf\OutputMessage $var
-     * @return $this
-     */
-    public function setMessage($var)
-    {
-        GPBUtil::checkMessage($var, \Addons\Core\Structs\Protobuf\OutputMessage::class);
-        $this->message = $var;
-
-        return $this;
+        return $this->action;
     }
 
     /**
      *客户端提示类型
      *
-     * Generated from protobuf field <code>.Addons.Core.Structs.Protobuf.OutputTipType tipType = 6;</code>
-     * @return \Addons\Core\Structs\Protobuf\OutputTipType
-     */
-    public function getTipType()
-    {
-        return $this->tipType;
-    }
-
-    /**
-     *客户端提示类型
-     *
-     * Generated from protobuf field <code>.Addons.Core.Structs.Protobuf.OutputTipType tipType = 6;</code>
-     * @param \Addons\Core\Structs\Protobuf\OutputTipType $var
+     * Generated from protobuf field <code>.Addons.Core.Structs.Protobuf.Action action = 4;</code>
+     * @param \Addons\Core\Structs\Protobuf\Action $var
      * @return $this
      */
-    public function setTipType($var)
+    public function setAction($var)
     {
-        GPBUtil::checkMessage($var, \Addons\Core\Structs\Protobuf\OutputTipType::class);
-        $this->tipType = $var;
+        GPBUtil::checkMessage($var, \Addons\Core\Structs\Protobuf\Action::class);
+        $this->action = $var;
 
         return $this;
     }
 
     /**
-     * 数据 JSON
+     * 数据 RAW or JSON
      *
-     * Generated from protobuf field <code>bytes data = 7;</code>
+     * Generated from protobuf field <code>bytes data = 5;</code>
      * @return string
      */
     public function getData()
@@ -253,9 +215,9 @@ class Output extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     * 数据 JSON
+     * 数据 RAW or JSON
      *
-     * Generated from protobuf field <code>bytes data = 7;</code>
+     * Generated from protobuf field <code>bytes data = 5;</code>
      * @param string $var
      * @return $this
      */
@@ -270,25 +232,25 @@ class Output extends \Google\Protobuf\Internal\Message
     /**
      * 当前时间
      *
-     * Generated from protobuf field <code>uint64 time = 8;</code>
+     * Generated from protobuf field <code>uint64 at = 6;</code>
      * @return int|string
      */
-    public function getTime()
+    public function getAt()
     {
-        return $this->time;
+        return $this->at;
     }
 
     /**
      * 当前时间
      *
-     * Generated from protobuf field <code>uint64 time = 8;</code>
+     * Generated from protobuf field <code>uint64 at = 6;</code>
      * @param int|string $var
      * @return $this
      */
-    public function setTime($var)
+    public function setAt($var)
     {
         GPBUtil::checkUint64($var);
-        $this->time = $var;
+        $this->at = $var;
 
         return $this;
     }
@@ -296,8 +258,8 @@ class Output extends \Google\Protobuf\Internal\Message
     /**
      * 执行时长
      *
-     * Generated from protobuf field <code>float duration = 9;</code>
-     * @return float
+     * Generated from protobuf field <code>uint32 duration = 7;</code>
+     * @return int
      */
     public function getDuration()
     {
@@ -307,13 +269,13 @@ class Output extends \Google\Protobuf\Internal\Message
     /**
      * 执行时长
      *
-     * Generated from protobuf field <code>float duration = 9;</code>
-     * @param float $var
+     * Generated from protobuf field <code>uint32 duration = 7;</code>
+     * @param int $var
      * @return $this
      */
     public function setDuration($var)
     {
-        GPBUtil::checkFloat($var);
+        GPBUtil::checkUint32($var);
         $this->duration = $var;
 
         return $this;
@@ -322,7 +284,7 @@ class Output extends \Google\Protobuf\Internal\Message
     /**
      * 原BODY
      *
-     * Generated from protobuf field <code>string body = 10;</code>
+     * Generated from protobuf field <code>string body = 8;</code>
      * @return string
      */
     public function getBody()
@@ -333,7 +295,7 @@ class Output extends \Google\Protobuf\Internal\Message
     /**
      * 原BODY
      *
-     * Generated from protobuf field <code>string body = 10;</code>
+     * Generated from protobuf field <code>string body = 8;</code>
      * @param string $var
      * @return $this
      */
@@ -348,7 +310,7 @@ class Output extends \Google\Protobuf\Internal\Message
     /**
      * KEY
      *
-     * Generated from protobuf field <code>bytes encrypted = 11;</code>
+     * Generated from protobuf field <code>bytes encrypted = 9;</code>
      * @return string
      */
     public function getEncrypted()
@@ -359,7 +321,7 @@ class Output extends \Google\Protobuf\Internal\Message
     /**
      * KEY
      *
-     * Generated from protobuf field <code>bytes encrypted = 11;</code>
+     * Generated from protobuf field <code>bytes encrypted = 9;</code>
      * @param string $var
      * @return $this
      */
@@ -372,3 +334,4 @@ class Output extends \Google\Protobuf\Internal\Message
     }
 
 }
+

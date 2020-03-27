@@ -31,16 +31,23 @@ class Mimes {
 		return self::$instance;
 	}
 
-	public function mime_by_ext($ext)
+	public function mime_by_ext(string $ext)
 	{
-		return isset($this->mimes[strtolower($ext)]) ? $this->mimes[strtolower($ext)][0] : false;
+		return isset($this->mimes[strtolower($ext)]) ? $this->mimes[strtolower($ext)][0] : null;
 	}
 
-	public function ext_by_mime($mime)
+	public function mimes_by_ext(string $ext)
+	{
+		return $this->mimes[strtolower($ext)] ?? null;
+	}
+
+	public function ext_by_mime(string $mime)
 	{
 		foreach ($this->mimes as $key => $value)
-			if (in_array($mime, $value)) return $key;
-		return $key;
+			if (in_array($mime, $value))
+				return $key;
+
+		return null;
 	}
 
 	public function get_mimes()

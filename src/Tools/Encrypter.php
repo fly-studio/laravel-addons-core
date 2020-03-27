@@ -98,12 +98,16 @@ class Encrypter implements EncrypterContract
         // Once we get the encrypted value we'll go ahead and base64_encode the input
         // vector and create the MAC for the encrypted value so we can then verify
         // its authenticity. Then, we'll JSON the data into the "payload" array.
-        $mac = $this->hash($iv = base64_encode($iv), $value);
+        $mac = $this->hash($iv, $value); // 此处修改了，之前这里是base64_encode(iv)
+
 
         $result = compact('iv', 'value', 'mac');
 
         if ($serialize)
         {
+            $iv = base64_encode($iv);
+            $result['value'] = base64_encode($result['value']);
+
             $json = json_encode($result, JSON_PARTIAL_OUTPUT_ON_ERROR);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new EncryptException('Could not encrypt the data.');

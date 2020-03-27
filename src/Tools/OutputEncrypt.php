@@ -83,21 +83,69 @@ class OutputEncrypt {
 
 	public function encryptPrivateRsa(string $value)
 	{
-		return $this->makePrivateRsa()->encrypt($value);
+		//return $this->makePrivateRsa()->encrypt($value);
+		$key = openssl_pkey_get_private($this->privateKey);
+ 		$bitLen = openssl_pkey_get_details ($key)['bits'] / 8 - 11;
+		$result = ''; $offset = 0; $len = strlen($value);
+		while($offset < $len)
+		{
+			$read = min($len - $offset, $bitLen);
+ 			openssl_private_encrypt(substr($value, $offset, $bitLen), $res, $key, OPENSSL_PKCS1_PADDING);
+ 			$result .= $res;
+ 			$offset += $read;
+		}
+ 		openssl_free_key($key);
+		return $result;
 	}
 
 	public function decryptPrivateRsa(string $value)
 	{
-		return $this->makePrivateRsa()->decrypt($value);
+		//return $this->makePrivateRsa()->decrypt($value);
+		$key = openssl_pkey_get_private($this->privateKey);
+		$bitLen = openssl_pkey_get_details ($key)['bits'] / 8;
+		$result = ''; $offset = 0; $len = strlen($value);
+		while($offset < $len)
+		{
+			$read = min($len - $offset, $bitLen);
+ 			openssl_private_decrypt(substr($value, $offset, $bitLen), $res, $key, OPENSSL_PKCS1_PADDING);
+ 			$result .= $res;
+ 			$offset += $read;
+		}
+ 		openssl_free_key($key);
+		return $result;
 	}
 
 	public function encryptPublicRsa(string $value)
 	{
-		return $this->makePublicRsa()->encrypt($value);
+		//return $this->makePublicRsa()->encrypt($value);
+		$key = openssl_pkey_get_public($this->publicKey);
+ 		$bitLen = openssl_pkey_get_details ($key)['bits'] / 8 - 11;
+		$result = ''; $offset = 0; $len = strlen($value);
+		while($offset < $len)
+		{
+			$read = min($len - $offset, $bitLen);
+ 			openssl_public_encrypt(substr($value, $offset, $bitLen), $res, $key, OPENSSL_PKCS1_PADDING);
+ 			$result .= $res;
+ 			$offset += $read;
+		}
+ 		openssl_free_key($key);
+		return $result;
 	}
 	public function decryptPublicRsa(string $value)
 	{
-		return $this->makePublicRsa()->decrypt($value);
+		//return $this->makePublicRsa()->decrypt($value);
+		$key = openssl_pkey_get_public($this->publicKey);
+ 		$bitLen = openssl_pkey_get_details ($key)['bits'] / 8;
+		$result = ''; $offset = 0; $len = strlen($value);
+		while($offset < $len)
+		{
+			$read = min($len - $offset, $bitLen);
+ 			openssl_public_decrypt(substr($value, $offset, $read), $res, $key, OPENSSL_PKCS1_PADDING);
+ 			$result .= $res;
+ 			$offset += $read;
+		}
+ 		openssl_free_key($key);
+		return $result;
 	}
 
 	public function encryptAes(string $value, string $aesKey = null)
@@ -124,7 +172,7 @@ class OutputEncrypt {
 
 		$encoded = $this->encryptAes($value, $aes['key']);
 
-		$aes['iv'] = $encoded['iv'];
+		$aes['iv'] = base64_encode($encoded['iv']);
 		$aes['mac'] = $encoded['mac'];
 		$aes['key'] = base64_encode($aes['key']);
 

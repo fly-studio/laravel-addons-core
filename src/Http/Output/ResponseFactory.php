@@ -40,11 +40,11 @@ class ResponseFactory {
 		return $raw instanceOf Response ? $raw : new Response($raw);
 	}
 
-	public function api($data, $encrypted = false, string $rsaType = 'public')
+	public function api($data)
 	{
 		$response = new ApiResponse();
 
-		return $response->data($data, $encrypted, $rsaType);
+		return $response->data($data);
 	}
 
 	public function office(?array $data)

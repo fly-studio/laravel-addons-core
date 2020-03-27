@@ -3,6 +3,7 @@
 namespace Addons\Core\Http\Output\Response;
 
 use Lang, Auth;
+use Carbon\Carbon;
 use JsonSerializable;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
@@ -11,6 +12,7 @@ use Illuminate\Http\Response;
 use Addons\Core\Tools\Output;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Addons\Core\Tools\OutputEncrypt;
 use Addons\Core\Contracts\Protobufable;
 use Illuminate\Contracts\Support\Jsonable;
 use Addons\Core\Http\Output\ActionFactory;
@@ -18,8 +20,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Symfony\Component\HttpFoundation\Request;
 
 use Addons\Core\Structs\Protobuf\Output as OutputProto;
-use Addons\Core\Structs\Protobuf\OutputMessage as MessageProto;
-use Addons\Core\Structs\Protobuf\OutputTipType as TipTypeProto;
+use Addons\Core\Structs\Protobuf\Action as ActionProto;
 
 class TextResponse extends Response implements Protobufable, Jsonable, Arrayable, JsonSerializable {
 
@@ -30,10 +31,12 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 	protected $action = null;
 	protected $uid = null;
 	protected $code = 0;
+	private $encrypted = null;
 
-	public function data($data)
+
+	public function data($data, bool $raw = false)
 	{
-		$data = json_decode(json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR), true); //turn Object to Array
+		$data = $raw ? $data : json_decode(json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR), true); //turn Object to Array
 
 		$this->data = $data;
 		return $this;
@@ -70,7 +73,7 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 		return $this;
 	}
 
-	public function rawMessage($message)
+	public function rawMessage(?string $message)
 	{
 		$this->message = $message;
 		return $this;
@@ -110,6 +113,13 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 		return $this;
 	}
 
+	public function encrypted(?string $encrypted)
+	{
+		$this->encrypted = $encrypted;
+
+		return $this;
+	}
+
 	public function getRequest()
 	{
 		return is_null($this->request) ? app('request') : $this->request;
@@ -123,8 +133,20 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 			$route = $request->route();
 			$of = $request->query('of', null);
 
-			if (!in_array($of, ['txt', 'text', 'json', 'xml', 'yaml', 'html']))
-				$of = $request->expectsJson() || (!empty($route) && in_array('api', $route->gatherMiddleware())) ? 'json' : 'html';
+			if (!in_array($of, ['txt', 'text', 'json', 'xml', 'yaml', 'html', 'protobuf', 'proto']))
+			{
+				$acceptable = $request->getAcceptableContentTypes();
+
+				if (isset($acceptable[0]) && Str::contains($acceptable[0], Mimes::getInstance()->mimes_by_ext('proto')))
+					$of = 'proto';
+				else if ($request->expectsJson()
+					|| ($this->getStatusCode() == 404 && strpos($request->path(), 'api/') === 0)
+					|| (!empty($route) && in_array('api', $route->middleware()))
+				)
+					$of = 'json';
+				else
+					$of = 'html';
+			}
 
 			return $of;
 		}
@@ -151,8 +173,10 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 			if ($code != Response::HTTP_OK)
 			{
 				return Lang::has('exception.http.'.$code) ? trans('exception.http.'.$code) : trans('core::common.default.error');
-			} else {
-				return trans('core::common.default.sucess');
+			}
+			else
+			{
+				return trans('core::common.default.success');
 			}
 		}
 
@@ -162,6 +186,11 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 	public function getAction()
 	{
 		return $this->action;
+	}
+
+	public function getEncrypted()
+	{
+		return $this->encrypted;
 	}
 
 	public function getOutputData()
@@ -188,6 +217,14 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 
 				$response = $this->setContent($content)
 					->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
+
+				break;
+			case 'proto':
+			case 'protobuf':
+				$content = $this->toProtobuf()->serializeToString();
+
+				$response = $this->setContent($content)
+					->header('Content-Type', Mimes::getInstance()->mime_by_ext($of));
 
 				break;
 			default: //其余全部为json
@@ -222,40 +259,32 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 
 	public function toProtobuf(): \Google\Protobuf\Internal\Message
 	{
-		$data = $this->toArray();
+		$data = $this->getOutputData();
 
 		$o = new OutputProto();
-		$o->setResult($data['result']);
-		$o->setCode($data['status_code']);
+		$o->setCode($data['code']);
+		$o->setMessage($data['message']);
 		!empty($data['uid']) && $o->setUid($data['uid']);
-		$o->setDebug($data['debug']);
+		$o->setAt($data['at']);
+		$o->setEncrypted($this->getEncrypted());
 
-		if (!empty($data['message']))
+		if (!is_null($data['data']))
 		{
-			$m = new MessageProto();
-			if (is_array($data['message']))
-			{
-				$m->setTitle($data['message']['title'] ?? null);
-				$m->setContent($data['message']['content'] ?? null);
-			} else if (is_string($message))
-				$m->setContent($data['message'] ?? null);
-			$o->setMessage($m);
+			$d = is_array($data['data']) ? json_encode($data['data'], JSON_PARTIAL_OUTPUT_ON_ERROR) : $data['data'];
+			$o->setData($d);
 		}
 
-		if (!empty($data['tipType']))
+		if (!empty($data['action']))
 		{
-			$t = new TipTypeProto();
-			!empty($data['tipType']['type']) && $t->setType($data['tipType']['type']);
-			!empty($data['tipType']['timeout']) && $t->setTimeout($data['tipType']['timeout']);
-			!empty($data['tipType']['url']) && $t->setUrl($data['tipType']['url']);
-			$o->setTipType($t);
+			$a = ActionProto::make(...$data['action']);
+			$o->setAction($a);
 		}
-		$d = !is_array($data['data']) ? $data['data'] : json_encode($data['data'], JSON_PARTIAL_OUTPUT_ON_ERROR);
-		!is_null($d) && $o->setData($d);
 
-		$o->setTime($data['time']);
-		$o->setDuration($data['duration']);
-		$o->setBody($data['body']);
+		if (config('app.debug'))
+		{
+			$o->setDuration($data['duration']);
+			$o->setBody($data['body']);
+		}
 
 		return $o;
 	}
@@ -268,12 +297,17 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 			'action' => $this->getAction(),
 			'data' => $this->getData(),
 			'uid' => $this->uid ? null : (Auth::check() ? Auth::user()->getKey() : null),
-			'at' => microtime(true),
+			'at' => Carbon::now()->getPreciseTimestamp(3), //ms timestamp
 		];
+
+		$encrypted = $this->getEncrypted();
+
+		if (!empty($encrypted))
+			$result['encrypted'] = $encrypted;
 
 		if (config('app.debug')) {
 			$result += [
-				'duration' => microtime(true) - LARAVEL_START,
+				'duration' => intval((microtime(true) - LARAVEL_START) * 1000),
 				'body' => strval($this->original),
 			];
 		}
@@ -359,4 +393,5 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 			return mb_strlen($key) * -1;
 		})->all();
 	}
+
 }

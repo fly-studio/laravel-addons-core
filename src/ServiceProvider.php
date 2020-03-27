@@ -2,9 +2,9 @@
 namespace Addons\Core;
 
 use Addons\Core\Cache\RWRedis;
-use Addons\Core\Middleware\Encrypt;
 use Addons\Core\Http\ResponseFactory;
-use Addons\Core\Middleware\CrossDomain;
+use Addons\Core\Http\Middleware\EncryptBody;
+use Addons\Core\Http\Middleware\CrossDomain;
 use Addons\Core\Coroutine\Database\MySqlConnection;
 use Addons\Core\Coroutine\Database\Connectors\MySqlConnector;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
@@ -33,7 +33,7 @@ class ServiceProvider extends BaseServiceProvider
 		//register router middleware
 		$router = $this->app['router'];
 		$router->aliasMiddleware('cross-domain', CrossDomain::class);
-		$router->aliasMiddleware('encrypt', Encrypt::class);
+		$router->aliasMiddleware('encrypt-body', EncryptBody::class);
 
 		$this->app->instance('path.vendor', realpath(__DIR__.'/../../../'));
 
