@@ -16,9 +16,9 @@
     ],
     "require": {
         "php": ">=7.2",
-        "illuminate/support": "^6.0",
-        "illuminate/translation": "^6.0",
-        "illuminate/database": "^6.0",
+        "illuminate/support": "^7.0",
+        "illuminate/translation": "^7.0",
+        "illuminate/database": "^7.0",
         "addons/smarty": "~1.0",
         "addons/func": "~1.0",
         "addons/censor": "~1.0"
