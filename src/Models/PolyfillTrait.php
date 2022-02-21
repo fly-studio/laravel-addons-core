@@ -9,7 +9,13 @@ use Illuminate\Contracts\Support\Arrayable;
 
 trait PolyfillTrait {
 
-	protected $originalCastTypes = ['int', 'integer', 'real' ,'float', 'double', 'string', 'bool', 'boolean', 'object', 'array', 'json', 'collection', 'date', 'datetime', 'timestamp', 'custom_datetime'];
+	protected $originalCastTypes = [
+		'int', 'integer', 'real' ,'float', 'double',
+		'string',
+		'bool', 'boolean',
+		'object', 'array', 'json', 'collection',
+		'date', 'datetime', 'timestamp', 'custom_datetime'
+	];
 
 	public static function insertUpdate(array $attributes)
 	{

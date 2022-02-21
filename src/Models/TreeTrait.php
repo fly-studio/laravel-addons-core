@@ -65,7 +65,9 @@ trait TreeTrait {
 	public function children()
 	{
 		$builder = $this->hasMany(get_class($this), $this->getParentKeyName(), $this->getKeyName());
-		!empty($this->getOrderKeyName()) && $builder->orderBy($this->getOrderKeyName(), 'asc');
+
+		if (!empty($this->getOrderKeyName()))
+			$builder->orderBy($this->getOrderKeyName(), 'asc');
 
 		return $builder;
 	}
@@ -108,9 +110,11 @@ trait TreeTrait {
 		{
 			while(!empty($node->getParentKey()))
 				$node = $this->getNode($node->getParentKey(), $columns);
+
 			return $node;
 		} else {
-			list(,,$rootid) = explode('/', $node->getPathKey()); // [/0/1/2/3/] => 1
+			list(,, $rootid) = explode('/', $node->getPathKey()); // [/0/1/2/3/] => 1
+
 			return $this->getNode($rootid, $columns);
 		}
 	}
@@ -156,7 +160,9 @@ trait TreeTrait {
 	{
 		$columns = $this->formatTreeColumns($columns);
 		$builder = static::where($this->getParentKeyName(), $this->getKey());
-		!empty($this->getOrderKeyName()) && $builder->orderBy($this->getOrderKeyName());
+
+		if (!empty($this->getOrderKeyName()))
+			$builder->orderBy($this->getOrderKeyName());
 
 		return $builder->get();
 	}
@@ -164,23 +170,38 @@ trait TreeTrait {
 	/**
 	 * 获得所有子(孙)集，不包含自己，返回一个Collection
 	 *
-	 * @return array 返回数据
+	 * @return Collection 返回数据
+	 */
+	public function getOffspring(array $columns = ['*'])
+	{
+		return $this->getLeaves($columns);
+	}
+
+	/**
+	 * getOffspring的别名
+	 *
+	 * @return Collection 返回数据
 	 */
 	public function getLeaves(array $columns = ['*'])
 	{
 		$columns = $this->formatTreeColumns($columns);
 		$node = $this;
+
 		if (!empty($this->getPathKeyName())) //使用Path搜索出来的节点，无法通过order进行良好的排序
 		{
 			$builder = static::where($this->getPathKeyName(), 'LIKE', $node->getPathKey().'%')
 				->where($node->getKeyName(), '!=', $node->getKey());
-			!empty($this->getOrderKeyName()) && $builder->orderBy($this->getOrderKeyName());
-			!empty($this->getPathKeyName()) && $builder->orderBy($this->getPathKeyName());
+
+			if (!empty($this->getOrderKeyName()))
+				$builder->orderBy($this->getOrderKeyName());
+
+			if (!empty($this->getPathKeyName()))
+				$builder->orderBy($this->getPathKeyName());
 
 			return $builder->get($columns);
-		}
-		else
-		{
+
+		} else {
+
 			$result = $this->newCollection();
 			$children = $this->getChildren($columns);
 
@@ -202,18 +223,24 @@ trait TreeTrait {
 	 */
 	public function getTree(array $columns = ['*'], bool $idAsKey = true)
 	{
-		$nodes = $this->getLeaves($columns)->prepend($this)->keyBy($this->getKeyName())->toArray();
+		$nodes = $this->getOffspring($columns)->prepend($this)->keyBy($this->getKeyName())->toArray();
 
 		return static::datasetToTree($nodes, $idAsKey);
 	}
 
 	private function formatTreeColumns(array $columns)
 	{
-		if (in_array('*', $columns)) return $columns;
+		if (in_array('*', $columns))
+			return $columns;
 
-		!in_array($this->getKeyName(), $columns) && $columns[] = $this->getKeyName();
-		!in_array($this->getParentKeyName(), $columns) && $columns[] = $this->getParentKeyName();
-		!in_array($this->getPathKeyName(), $columns) && $columns[] = $this->getPathKeyName();
+		if (!in_array($this->getKeyName(), $columns))
+			$columns[] = $this->getKeyName();
+
+		if (!in_array($this->getParentKeyName(), $columns))
+			$columns[] = $this->getParentKeyName();
+
+		if (!in_array($this->getPathKeyName(), $columns))
+			$columns[] = $this->getPathKeyName();
 
 		return $columns;
 	}
@@ -234,7 +261,10 @@ trait TreeTrait {
 	{
 		if (empty($this->getOrderKeyName())) return null;
 
-		return static::where($this->getKeyName(), $this->getKey())->update([$this->getOrderKeyName() => $this->newOrder()]);
+		return static::where($this->getKeyName(), $this->getKey())
+			->update([
+				$this->getOrderKeyName() => $this->newOrder()
+			]);
 	}
 
 	public function movePrev($target_id)
@@ -273,7 +303,10 @@ trait TreeTrait {
 		{
 			$order = intval($targetNode->getOrderKey()) + ($move_type == 'prev' ? 0 : 1);
 			//更新同父级下所有的顺序
-			static::where($this->getParentKeyName(), $targetNode->getParentKey())->where($this->getOrderKeyName(), '>=', $order)->increment($this->getOrderKeyName());
+			static::where($this->getParentKeyName(), $targetNode->getParentKey())
+				->where($this->getOrderKeyName(), '>=', $order)
+				->increment($this->getOrderKeyName());
+
 			$this->update([$this->getOrderKeyName() => $order]); //更新自己的顺序
 		}
 
@@ -300,7 +333,8 @@ trait TreeTrait {
 		{
 			foreach ($items as $item)
 			{
-				if ($item[$node->getKeyName()] == $item[$node->getParentKeyName()]) continue; //如果父ID等于自己，避免死循环，跳过
+				if ($item[$node->getKeyName()] == $item[$node->getParentKeyName()])
+					continue; //如果父ID等于自己，避免死循环，跳过
 
 				$ids[] = $item[$node->getKeyName()];
 				$items[ ($item[$node->getParentKeyName()]) ][ 'children' ][ ($item[$node->getKeyName()]) ] = &$items[ ($item[$node->getKeyName()]) ];
@@ -310,7 +344,8 @@ trait TreeTrait {
 		{
 			foreach ($items as $item)
 			{
-				if ($item[$node->getKeyName()] == $item[$node->getParentKeyName()]) continue; //如果父ID等于自己，避免死循环，跳过
+				if ($item[$node->getKeyName()] == $item[$node->getParentKeyName()])
+					continue; //如果父ID等于自己，避免死循环，跳过
 
 				$ids[] = $item[$node->getKeyName()];
 				$items[ ($item[$node->getParentKeyName()]) ][ 'children' ][] = &$items[ ($item[$node->getKeyName()]) ];
@@ -330,19 +365,30 @@ trait TreeTrait {
 	protected function changeParent()
 	{
 		$newParent = $this->getNode($this->getParentKey());
-		if(empty($newParent) || $this->getParentKey() == $this->getOriginal($this->getParentKeyName())) return null;
+
+		if(empty($newParent) || $this->getParentKey() == $this->getOriginal($this->getParentKeyName()))
+			return null;
 
 		if (!empty($this->getPathKeyName()))
 		{
 			$newPath = $newParent->getPathKey() . $this->getKey() . '/';
-			static::where($this->getPathKeyName(), 'LIKE', '%'.$this->getPathKey().'%')->update([$this->getPathKeyName() => DB::raw('REPLACE(`'.$this->getPathKeyName().'`, \''.$this->getPathKey().'\', \''.$newPath.'\')')]);
+
+			static::where($this->getPathKeyName(), 'LIKE', '%'.$this->getPathKey().'%')
+				->update([
+					$this->getPathKeyName() => DB::raw('REPLACE(`'.$this->getPathKeyName().'`, \''.$this->getPathKey().'\', \''.$newPath.'\')')
+				]);
 		}
 
 		if (!empty($this->getLevelKeyName()))
 		{
 			$deltaLevel = intval($this->getLevelKey()) - intval($newParent->getLevelKey()) - 1;
-			$ids = $this->getLeaves([])->add($this)->modelKeys(); //get id pid
-			static::whereIn($this->getKeyName(), $ids)->decrement($this->getLevelKeyName(), $deltaLevel);
+
+			$ids = $this->getOffspring([])
+				->add($this)
+				->modelKeys(); //get id pid
+
+			static::whereIn($this->getKeyName(), $ids)
+				->decrement($this->getLevelKeyName(), $deltaLevel);
 		}
 
 		return $this;
@@ -352,8 +398,11 @@ trait TreeTrait {
 	{
 		//更新order/level
 		static::creating(function($node){
-			!empty($node->getOrderKeyName()) && $node[$node->getOrderKeyName()] = $node->newOrder();
-			!empty($node->getLevelKeyName()) && $node[$node->getLevelKeyName()] = $node->getParent()->getLevelKey() + 1;
+			if (!empty($node->getOrderKeyName()))
+				$node[$node->getOrderKeyName()] = $node->newOrder();
+
+			if (!empty($node->getLevelKeyName()))
+				$node[$node->getLevelKeyName()] = $node->getParent()->getLevelKey() + 1;
 		});
 
 		//更新path

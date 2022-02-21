@@ -133,19 +133,14 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 			$route = $request->route();
 			$of = $request->query('of', null);
 
-			if (!in_array($of, ['txt', 'text', 'json', 'xml', 'yaml', 'html', 'protobuf', 'proto']))
+			if (!in_array($of, ['txt', 'text', 'json', 'xml', 'yml', 'yaml', 'protobuf', 'proto']))
 			{
 				$acceptable = $request->getAcceptableContentTypes();
 
 				if (isset($acceptable[0]) && Str::contains($acceptable[0], Mimes::getInstance()->mimes_by_ext('proto')))
 					$of = 'proto';
-				else if ($request->expectsJson()
-					|| ($this->getStatusCode() == 404 && strpos($request->path(), 'api/') === 0)
-					|| (!empty($route) && in_array('api', $route->middleware()))
-				)
-					$of = 'json';
 				else
-					$of = 'html';
+					$of = 'json';
 			}
 
 			return $of;
@@ -211,9 +206,9 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 			case 'xml':
 			case 'txt':
 			case 'text':
-			case 'yaml':
-			case 'html': //text
-				$content = $of != 'html' ? Output::$of($data) : view('tips', ['_data' => $data]);
+			case 'yml':
+			case 'yaml': //text
+				$content = Output::$of($data);
 
 				$response = $this->setContent($content)
 					->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
@@ -370,7 +365,9 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 		$replace = Arr::dot($replace);
 
 		foreach ($replace as $key => $value) {
-			if (is_array($value)) continue;
+			if (is_array($value))
+				continue;
+
 			$line = str_replace(
 				[':'.$key, ':'.Str::upper($key), ':'.Str::ucfirst($key)],
 				[$value, Str::upper($value), Str::ucfirst($value)],

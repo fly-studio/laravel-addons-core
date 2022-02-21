@@ -28,7 +28,6 @@ class ServiceProvider extends BaseServiceProvider
 		$this->app->bind('Illuminate\Contracts\Routing\ResponseFactory', ResponseFactory::class);
 
 		$this->mergeConfigFrom(__DIR__ . '/../config/mimes.php', 'mimes');
-		$this->mergeConfigFrom(__DIR__ . '/../config/output.php', 'output');
 
 		//register router middleware
 		$router = $this->app['router'];

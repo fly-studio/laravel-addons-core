@@ -45,7 +45,7 @@ class TreeNode implements ArrayAccess, JsonSerializable, Jsonable, Arrayable {
 		$dot = strpos($key, '.');
 		$dot === false && $dot = strlen($key);
 
-		$segment = substr($key, 0,  $dot);
+		$segment = substr($key, 0, $dot);
 
 		foreach($this->children as $node)
 		{
@@ -74,6 +74,11 @@ class TreeNode implements ArrayAccess, JsonSerializable, Jsonable, Arrayable {
 		return $this->children;
 	}
 
+	public function offspring(Collection $offspring = null)
+	{
+		return $this->leaves($offspring);
+	}
+
 	public function leaves(Collection $leaves = null)
 	{
 		is_null($leaves) && $leaves = new Collection();
@@ -84,6 +89,7 @@ class TreeNode implements ArrayAccess, JsonSerializable, Jsonable, Arrayable {
 			if ($node->hasChildren())
 				$node->leaves($leaves);
 		}
+
 		return $leaves;
 	}
 

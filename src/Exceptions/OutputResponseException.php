@@ -10,7 +10,18 @@ class OutputResponseException extends HttpResponseException {
 
 	public function __construct($messageNameOrInstance = null)
 	{
-		$this->response = $messageNameOrInstance instanceof TextResponse ? $messageNameOrInstance : app(ResponseFactory::class)->error($messageNameOrInstance);
+		if ($messageNameOrInstance instanceof TextResponse)
+		{
+			$this->response = $messageNameOrInstance;
+		} else {
+			$this->response = app(ResponseFactory::class)->error();
+			$this->message($messageNameOrInstance);
+		}
+	}
+
+	public static function create($messageNameOrInstance = null)
+	{
+		return new static($messageNameOrInstance);
 	}
 
 	public function headers($headers)

@@ -168,6 +168,7 @@ return [
 	'so' => ['application/octet-stream'],
 	'src' => ['application/x-wais-source'],
 	'svg' => ['image/svg+xml'],
+	'svga' => ['image/svga+xml'],
 	'swf' => ['application/x-shockwave-flash'],
 	't' => ['application/x-troff','text/troff'],
 	'tar' => ['application/x-tar'],
