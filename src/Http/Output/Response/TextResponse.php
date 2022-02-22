@@ -12,8 +12,6 @@ use Illuminate\Http\Response;
 use Addons\Core\Tools\Output;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
-use Addons\Core\Tools\OutputEncrypt;
-use Addons\Core\Contracts\Protobufable;
 use Illuminate\Contracts\Support\Jsonable;
 use Addons\Core\Http\Output\ActionFactory;
 use Illuminate\Contracts\Support\Arrayable;
@@ -22,7 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Addons\Core\Structs\Protobuf\Output as OutputProto;
 use Addons\Core\Structs\Protobuf\Action as ActionProto;
 
-class TextResponse extends Response implements Protobufable, Jsonable, Arrayable, JsonSerializable {
+class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializable {
 
 	protected $request = null;
 	protected $data = null;
@@ -193,7 +191,7 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 		return $this->toArray();
 	}
 
-	public function prepare(Request $request)
+	public function prepare(Request $request): static
 	{
 		$data = $this->getOutputData();
 
@@ -244,44 +242,12 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 	 *
 	 * @return Response
 	 */
-	public function send()
+	public function send(): static
 	{
 		//404的错误比较特殊，无法找到路由，并且不会执行prepare
 		$this->prepare($this->getRequest());
 
 		return parent::send();
-	}
-
-	public function toProtobuf(): \Google\Protobuf\Internal\Message
-	{
-		$data = $this->getOutputData();
-
-		$o = new OutputProto();
-		$o->setCode($data['code']);
-		$o->setMessage($data['message']);
-		!empty($data['uid']) && $o->setUid($data['uid']);
-		$o->setAt($data['at']);
-		$o->setEncrypted($this->getEncrypted());
-
-		if (!is_null($data['data']))
-		{
-			$d = is_array($data['data']) ? json_encode($data['data'], JSON_PARTIAL_OUTPUT_ON_ERROR) : $data['data'];
-			$o->setData($d);
-		}
-
-		if (!empty($data['action']))
-		{
-			$a = ActionProto::make(...$data['action']);
-			$o->setAction($a);
-		}
-
-		if (config('app.debug'))
-		{
-			$o->setDuration($data['duration']);
-			$o->setBody($data['body']);
-		}
-
-		return $o;
 	}
 
 	public function toArray()
@@ -294,11 +260,6 @@ class TextResponse extends Response implements Protobufable, Jsonable, Arrayable
 			'uid' => $this->uid ? null : (Auth::check() ? Auth::user()->getKey() : null),
 			'at' => Carbon::now()->getPreciseTimestamp(3), //ms timestamp
 		];
-
-		$encrypted = $this->getEncrypted();
-
-		if (!empty($encrypted))
-			$result['encrypted'] = $encrypted;
 
 		if (config('app.debug')) {
 			$result += [

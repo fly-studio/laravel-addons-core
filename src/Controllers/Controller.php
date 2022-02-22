@@ -4,12 +4,14 @@ namespace Addons\Core\Controllers;
 
 use Addons\Core\Events\ControllerEvent;
 use Addons\Core\Controllers\OutputTrait;
-use Addons\Entrust\Controllers\PermissionTrait;
 use Illuminate\Routing\Controller as BaseController;
+use Addons\Censor\Validation\ValidatesRequests;
+use Addons\Entrust\Controllers\PermissionTrait;
+
 
 class Controller extends BaseController {
 
-	use PermissionTrait, OutputTrait;
+	use PermissionTrait, OutputTrait, ValidatesRequests;
 
 	protected $disableUser = false;
 
@@ -17,13 +19,16 @@ class Controller extends BaseController {
 	{
 		//event before
 		event('controller.before: '.get_class($this).'@'.$method, [new ControllerEvent($this, $method)]);
+
 		// check current user's permissions
-		if (!$this->disableUser) $this->checkPermission($method);
+		if (!$this->disableUser)
+			$this->checkPermission($method);
 
 		$this->viewData['_permissionTable'] = $this->permissionTable;
 		$this->viewData['_method'] = $method;
 
-		$response = call_user_func_array([$this, $method], $parameters);
+		$response = $this->{$method}(...array_values($parameters));
+
 		//event successful
 		event('controller.after: '.get_class($this).'@'.$method, [new ControllerEvent($this, $method, null, $response)]);
 		return $response;

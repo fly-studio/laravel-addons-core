@@ -32,44 +32,38 @@ class Router extends BaseRouter {
 	 * crud routes
 	 * include resource route, and data/export/print
 	 *
-	 * @example $this->crud('member', 'MemeberController');
-	 * @example $this->crud(['member' => 'MemberController', 'role' => 'RoleController'])
+	 * @example $this->crud('member', MemeberController::class);
 	 *
-	 * @param  [array|string] $route_name
-	 * @param  [string] $controller NULL or controller
+	 * @param  [string] $uri
+	 * @param  [string] $controller class name
 	 */
-	public function crud($name, $controller = NULL)
+	public function crud(string $uri, string $controller)
 	{
-		$list = !is_array($name) ? [$name => $controller] : $name;
-		foreach($list as $name => $controller)
-		{
-			$this->get($name.'/data', $controller.'@data');
-			$this->post($name.'/data', $controller.'@data');
-			$this->get($name.'/export', $controller.'@export');
-			$this->get($name.'/print', $controller.'@print');
-			$this->resource($name, $controller);
-		}
+		$this->get($uri.'/data', [$controller, 'data']);
+		$this->post($uri.'/data', [$controller, 'data']);
+		$this->get($uri.'/export', [$controller, 'export']);
+		$this->get($uri.'/print', [$controller, 'print']);
+		$this->resource($uri, $controller);
 	}
 
 	/**
-	 * actions
+	 * action
 	 *
-	 * @example $this->actions(['member' => ['index', 'edit', 'delete']]);
-	 * @example $this->actions(['member' => ['index', 'e' => 'edit', 'd' => 'delete']]);
+	 * @example $this->action('user', User::class, ['index', 'edit', 'delete']);
+	 * @example $this->action(user', User::class, ['index', 'e' => 'edit', 'd' => 'delete']);
 	 *
-	 * @param  [string] $controllers
+	 * @param  [string] $uri
+	 * @param  [string] $controller
+	 * @param  [array] $actions
 	 * @param  [string] $method
 	 */
-	public function actions(array $controllers, $method = 'any')
+	public function action(string $uri, string $controller, array $actions, $method = 'any')
 	{
-		foreach ($controllers as $name => $actions)
+		foreach ($actions as $name => $action)
 		{
-			$controller = Str::studly($name).'Controller';
-			foreach($actions as $k => $action)
-			{
-				is_numeric($k) && $k = $action;
-				$this->$method($name.($k == 'index' ? '' : '/'.$k), $controller.'@'.Str::camel($action));
-			}
+			if (is_numeric($name))
+				$name = $action;
+			$this->$method($uri.($name == 'index' ? '' : '/'.$name), [$controller, Str::camel($action)]);
 		}
 	}
 

@@ -63,7 +63,7 @@ class TreeCollection extends Collection {
 	 * @param  mixed  $value
 	 * @return void
 	 */
-	public function offsetSet($key, $value)
+	public function offsetSet($key, $value): void
 	{
 		$value = $value instanceof TreeNode ? $value : new TreeNode($value);
 

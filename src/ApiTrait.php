@@ -155,6 +155,8 @@ trait ApiTrait {
 	{
 		$size = Arr::get($condition, 'size') ?: config('size.models.'.$builder->getModel()->getTable(), config('size.common'));
 		$page = Arr::get($condition, 'page', 1);
+		if (!is_numeric($page))
+			$page = 1;
 
 		if (Arr::get($condition, 'all') == 'true') $size = 10000;//$builder->count(); //为统一使用paginate输出数据格式,这里需要将size设置为整表数量
 

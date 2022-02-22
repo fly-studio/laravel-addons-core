@@ -135,7 +135,7 @@ class TreeNode implements ArrayAccess, JsonSerializable, Jsonable, Arrayable {
 		return $key == 'children' ? $this->children : Arr::get($this->items, $key);
 	}
 
-	public function offsetSet($key, $value)
+	public function offsetSet($key, $value): void
 	{
 		if ($key == 'children')
 			throw new \Exception('Cannot set children');
