@@ -4,7 +4,6 @@ namespace Addons\Core\Controllers\Concerns;
 
 use BadMethodCallException;
 use Addons\Core\Http\Output\ResponseFactory;
-use Addons\Core\Exceptions\OutputResponseException;
 
 /**
  * Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException	403
@@ -43,7 +42,5 @@ trait OutputResponseTrait {
 	public function error(string $messageName = null, $data = null)
 	{
 		return app(ResponseFactory::class)->make('error', ...func_get_args());
-		//抛出失败，终止运行，因为需要返回一个response做链式的修改，所以抛出异常的方式废止
-		//throw new OutputResponseException($response);
 	}
 }

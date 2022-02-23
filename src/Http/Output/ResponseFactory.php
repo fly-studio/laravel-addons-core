@@ -3,7 +3,7 @@
 namespace Addons\Core\Http\Output;
 
 use Lang;
-use Exception;
+use Throwable;
 use BadMethodCallException;
 use Illuminate\Http\Response;
 use Addons\Core\Http\Output\Response\ApiResponse;
@@ -54,7 +54,7 @@ class ResponseFactory {
 		return $response->data($data);
 	}
 
-	public function exception(Exception $e, string $messageName = null)
+	public function exception(Throwable $e, string $messageName = null)
 	{
 		$response = new ExceptionResponse();
 		$response

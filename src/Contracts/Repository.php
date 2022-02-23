@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 abstract class Repository {
 	use ApiTrait;
 
-	abstract public function prePage();
+	abstract public function prePage(): int;
 	abstract public function find($id, array $columns = ['*']);
 	abstract public function store(array $data);
 	abstract public function update(Model $model, array $data);
