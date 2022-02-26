@@ -12,7 +12,7 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 	/**
 	 * Automatically sets the ETag header according to the checksum of the file.
 	 */
-	public function setAutoEtag()
+	public function setAutoEtag(): static
 	{
 		$this->setEtag(md5(serialize(fileinfo($this->file->getPathname()))));
 		return $this;
@@ -31,7 +31,7 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 	 *
 	 * @throws FileException
 	 */
-	public function setFile($file, $contentDisposition = null, $etag = false, $lastModified = true)
+	public function setFile(\SplFileInfo|string $file, string $contentDisposition = null, bool|string $autoEtag = false, bool|string|int $autoLastModified = true): static
 	{
 		if (!$file instanceof File) {
 			if ($file instanceof \SplFileInfo) {
@@ -47,17 +47,17 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 
 		$this->file = $file;
 
-		if ($etag === true)
+		if ($autoEtag === true)
 			$this->setAutoEtag();
-		elseif (!empty($etag))
-			$this->setEtag($etag);
+		elseif (!empty($autoEtag))
+			$this->setEtag($autoEtag);
 
-		if ($lastModified === true)
+		if ($autoLastModified === true)
 			$this->setAutoLastModified();
-		elseif (!empty($lastModified))
-		{
-			is_numeric($lastModified) && $lastModified = '@'.$lastModified;
-			$this->setLastModified(new \DateTime($lastModified));
+		elseif (!empty($lastModified)) {
+			if (is_numeric($lastModified))
+				$autoLastModified = '@'.$autoLastModified;
+			$this->setLastModified(new \DateTime($autoLastModified));
 		}
 
 		if ($contentDisposition)
@@ -70,7 +70,7 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function prepare(Request $request)
+	public function prepare(Request $request): static
 	{
 
 		parent::prepare($request);

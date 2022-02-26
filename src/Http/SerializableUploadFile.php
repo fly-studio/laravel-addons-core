@@ -46,7 +46,7 @@ class SerializableUploadFile implements \Serializable {
 				'path' => $this->file->getPathname(),
 				'originalName' => $this->file->getClientOriginalName(),
 				'mimeType' => $this->file->getClientMimeType() ?: $this->file->getMimeType(),
-				'size' => $this->file->getClientSize() ?: $this->file->getSize(),
+				'size' => $this->file->getSize(),
 				'error' => $this->file->getError(),
 			];
 		} catch (\Exception $e) {
