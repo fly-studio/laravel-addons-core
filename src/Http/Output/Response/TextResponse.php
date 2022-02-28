@@ -83,12 +83,9 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
 		return $this;
 	}
 
-	public function code(int $code)
+	public function code(int|string $code)
 	{
 		$this->code = $code;
-
-		/*if ($code >= 100 && $code < 600)
-			$this->setStatusCode($code, $text);*/
 
 		return $this;
 	}
@@ -152,7 +149,7 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
 		return $this->data;
 	}
 
-	public function getCode()
+	public function getCode(): int|string
 	{
 		return $this->code;
 	}

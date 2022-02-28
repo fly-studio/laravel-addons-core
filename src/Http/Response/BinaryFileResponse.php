@@ -31,7 +31,7 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
 	 *
 	 * @throws FileException
 	 */
-	public function setFile(\SplFileInfo|string $file, string $contentDisposition = null, bool|string $autoEtag = false, bool|string|int $autoLastModified = true): static
+	public function setFile(\SplFileInfo|string $file, string $contentDisposition = null, bool|string $autoEtag = false, bool|string $autoLastModified = true): static
 	{
 		if (!$file instanceof File) {
 			if ($file instanceof \SplFileInfo) {
