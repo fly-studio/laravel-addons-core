@@ -215,13 +215,36 @@ trait TreeTrait {
 	}
 
 	/**
+	 * 通过pid获取树, 注意: 这是一个static方法
+	 *
+	 * @param int $pid 父级ID, 如果将整个表生成树结构, 传递null，注意：roles表中 0 是一个存在的记录， 所以传递0将无法得到id为0的node
+	 * @param array $columns 需要取出的字段名
+	 * @param bool 返回的children中，是否以ID为Key
+	 * @return array 返回数据
+	 */
+	public static function getTreeByPid(int $pid = null, array $columns = ['*'], bool $idAsKey = false) {
+		if (is_null($pid)) {
+			$model = new static();
+			$builder = $model->newQuery();
+			if (!empty($model->getOrderKeyName()))
+				$builder->orderBy($model->getOrderKeyName());
+
+			$nodes = $builder->get($columns)->keyBy($model->getKeyName())->toArray();
+		} else {
+			$nodes = static::find($pid)->getTree($columns, $idAsKey);
+		}
+
+		return static::datasetToTree($nodes, $idAsKey);
+	}
+
+	/**
 	 * 获得一颗树，返回一个Tree的数组
 	 *
 	 * @param array $columns 需要取出的字段名
 	 * @param bool 返回的children中，是否以ID为Key
 	 * @return array 返回数据
 	 */
-	public function getTree(array $columns = ['*'], bool $idAsKey = true)
+	public function getTree(array $columns = ['*'], bool $idAsKey = false)
 	{
 		$nodes = $this->getOffspring($columns)->prepend($this)->keyBy($this->getKeyName())->toArray();
 
@@ -324,7 +347,7 @@ trait TreeTrait {
 	 * @param mixed $items ID为KEY的二维数组
 	 * @param bool 返回的children中，是否以ID为Key
 	 */
-	public static function datasetToTree(array $items, bool $idAsKey = true)
+	public static function datasetToTree(array $items, bool $idAsKey = false)
 	{
 		$node = new static;
 		$ids = [];

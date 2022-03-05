@@ -43,6 +43,7 @@ class Router extends BaseRouter {
 		$this->post($uri.'/data', [$controller, 'data']);
 		$this->get($uri.'/export', [$controller, 'export']);
 		$this->get($uri.'/print', [$controller, 'print']);
+		$this->get($uri.'/tree/{pid?}', [$controller, 'tree']);
 		$this->resource($uri, $controller);
 	}
 

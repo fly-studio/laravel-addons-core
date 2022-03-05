@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 trait ApiTrait {
 
 	protected $apiOperators = [
+		'0' => '>=', '1' => '<=',
 		'in' => 'in', 'nin' => 'not in', 'is' => 'is',
 		'min' => '>=', 'gte' => '>=', 'max' => '<=', 'lte' => '<=', 'btw' => 'between', 'nbtw' => 'not between', 'gt' => '>', 'lt' => '<',
 		'neq' => '<>', 'ne' => '<>', 'eq' => '=', 'equal' => '=',
