@@ -154,19 +154,29 @@ trait ApiTrait {
 
 	public function _getPaginate(ArrayAccess $condition, Builder $builder, array $columns = ['*'], array $extra_query = [])
 	{
-		$size = Arr::get($condition, 'size') ?: config('size.models.'.$builder->getModel()->getTable(), config('size.common'));
+		$_b1 = clone $builder;
+
+		$size = Arr::get($condition, 'size', 50);
 		$page = Arr::get($condition, 'page', 1);
 		if (!is_numeric($page))
 			$page = 1;
 
-		if (Arr::get($condition, 'all') == 'true') $size = 10000;//$builder->count(); //为统一使用paginate输出数据格式,这里需要将size设置为整表数量
+		if (Arr::get($condition, 'all') == 'true')
+			$size = 10000; // $_b1->count(); //为统一使用paginate输出数据格式,这里需要将size设置为整表数量
 
-		$tables_columns = $this->_getColumns($builder);
-		$filters = $this->_doFilters($condition, $builder, $tables_columns);
-		$queries = $this->_doQueries($condition, $builder);
-		$orders = $this->_doOrders($condition, $builder, $tables_columns);
+		$tables_columns = $this->_getColumns($_b1);
+		$filters = $this->_doFilters($condition, $_b1, $tables_columns);
+		$queries = $this->_doQueries($condition, $_b1);
+		$orders = $this->_doOrders($condition, $_b1, $tables_columns);
 
-		$paginate = $builder->paginate($size, $columns, 'page', $page);
+		$paginate = $_b1->paginate($size, $columns, 'page', $page);
+
+		if (!empty($ids = Arr::get($condition, 'withIds', []))) {
+			$_b2 = clone $builder;
+			$list = $_b2->whereIn('id', Arr::wrap($ids))->get($columns);
+
+			$paginate->push(...$list->diff($paginate->getCollection())); // 添加非重复性
+		}
 
 		$query_strings = array_merge_recursive(['f' => $filters, 'q' => $queries], $extra_query);
 		$paginate->appends($query_strings);
