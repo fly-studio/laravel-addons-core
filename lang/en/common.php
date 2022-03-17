@@ -31,7 +31,7 @@ return [
 		'permission_forbidden' => 'You have no permission to visit this page，if you wanna switch a super user, <a href="'.url('auth').'" target="_self">Click here</a>.',
 		'failure_login' => 'Username or Password is invalid.',
 		'unlogin' => 'No login, if you wanna login, <a href="'.url('auth').'" target="_self">Click here</a>.',
-		'unAuthorization' => 'API Authorization Error, You must add the correctly HTTP Header "Authorization" to your request.',
+		'unauthorized' => 'API Authorization Error, You must add the correctly HTTP Header "Authorization" to your request.',
 	],
 	'document' => [
 		'not_exists' => 'the document that your visited is not exists.',

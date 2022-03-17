@@ -31,7 +31,7 @@ return [
 		'permission_forbidden' => '您的权限不够，无法执行该操作，或无法访问本页面，切换用户请<a href="'.url('auth').'" target="_self">点击这里</a>！',
 		'failure_login' => '账号或密码错误！',
 		'unlogin' => '您尚未登录，无法访问本页面，登录请<a href="'.url('auth').'" target="_self">点击这里</a>！',
-		'unAuthorization' => '您调用的API校验错误，需要在HTTP请求头中添加正确的：Authorization头信息。',
+		'unauthorized' => '您调用的API校验错误，需要在HTTP请求头中添加正确的Authorization头信息。',
 	],
 	'document' => [
 		'not_exists' => '您要查找的资料不存在！',
