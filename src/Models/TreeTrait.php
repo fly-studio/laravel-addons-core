@@ -230,11 +230,10 @@ trait TreeTrait {
 				$builder->orderBy($model->getOrderKeyName());
 
 			$nodes = $builder->get($columns)->keyBy($model->getKeyName())->toArray();
+			return static::datasetToTree($nodes, $idAsKey);
 		} else {
-			$nodes = static::find($pid)->getTree($columns, $idAsKey);
+			return static::find($pid)->getTree($columns, $idAsKey);
 		}
-
-		return static::datasetToTree($nodes, $idAsKey);
 	}
 
 	/**
