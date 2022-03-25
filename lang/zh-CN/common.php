@@ -23,7 +23,7 @@ return [
 		'error_database' => '服务器数据库出现错误，请稍后再试。',
 	],
 	'validation' => [
-		'csrf_invalid' => '您可能停留页面时间过长，请保存数据后，刷新当前页面后再重试。',
+		'csrf_invalid' => '您停留时间过长，请刷新后重新提交！',
 	],
 	'auth' => [
 		'success_login' => '登录成功，即将跳转到刚才的页面。',

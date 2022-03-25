@@ -23,7 +23,7 @@ return [
 		'error_database' => 'Database error, please retry later.',
 	],
 	'validation' => [
-		'csrf_invalid' => 'maybe you stay too long, please save your data.(copy the `content` to other tool, eg. notepad), then refresh this page, and retry.',
+		'csrf_invalid' => 'maybe you stay too long, please refresh this page, and retry.',
 	],
 	'auth' => [
 		'success_login' => 'Login success, redirect to the page that you last visited.',
