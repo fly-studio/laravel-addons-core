@@ -31,7 +31,6 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
     protected $code = 0;
     protected $viewFile = null;
 
-
     public function data($data, bool $raw = false)
     {
         $data = $raw ? $data : json_decode(json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR), true); //turn Object to Array
