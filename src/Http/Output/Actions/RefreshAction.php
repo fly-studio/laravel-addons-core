@@ -14,7 +14,7 @@ class RefreshAction extends Action {
         $this->timeout = $timeout;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }

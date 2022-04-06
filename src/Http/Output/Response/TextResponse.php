@@ -251,20 +251,14 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
             'action' => $this->getAction(),
             'data' => $this->getData(),
             'uid' => $this->uid ? null : (Auth::check() ? Auth::user()->getKey() : null),
-            'at' => Carbon::now()->getPreciseTimestamp(3), //ms timestamp
+            'at' => Carbon::now()->getPreciseTimestamp(3), // ms timestamp
+            'duration' => intval((microtime(true) - LARAVEL_START) * 1000),
         ];
-
-        if (config('app.debug')) {
-            $result += [
-                'duration' => intval((microtime(true) - LARAVEL_START) * 1000),
-                'body' => strval($this->original),
-            ];
-        }
 
         return $result;
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }

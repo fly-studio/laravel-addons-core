@@ -16,7 +16,7 @@ class RedirectAction extends Action {
         $this->url = app('router')->has($url) ? route($url) : url($url);
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }

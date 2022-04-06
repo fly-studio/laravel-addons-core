@@ -29,7 +29,7 @@ class OfficeResponse extends TextResponse {
         return $this->getData();
     }
 
-    public function prepare(Request $request)
+    public function prepare(Request $request): static
     {
         $data = $this->getOutputData();
         $of = $this->getOf();
@@ -41,7 +41,11 @@ class OfficeResponse extends TextResponse {
             case 'xlsx':
                 $filename = Office::$of($data);
 
-                $response = response()->download($filename, date('YmdHis').'.'.$of, ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)])
+                $response = response()->download(
+                    $filename,
+                    date('YmdHis').'.'.$of,
+                    ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)]
+                )
                     ->deleteFileAfterSend(true)
                     ->setStatusCode($this->getStatusCode());
                 break;

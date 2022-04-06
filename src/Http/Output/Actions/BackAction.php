@@ -12,7 +12,7 @@ class BackAction extends Action {
 
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
