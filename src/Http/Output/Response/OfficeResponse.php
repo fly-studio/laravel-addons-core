@@ -6,6 +6,7 @@ use Addons\Core\File\Mimes;
 use Addons\Core\Tools\Office;
 use Symfony\Component\HttpFoundation\Request;
 use Addons\Core\Http\Output\Response\TextResponse;
+use Addons\Core\Http\Response\BinaryFileResponse;
 
 class OfficeResponse extends TextResponse {
 
@@ -29,11 +30,9 @@ class OfficeResponse extends TextResponse {
         return $this->getData();
     }
 
-    public function prepare(Request $request): static
-    {
+    public function toDownload(): ?BinaryFileResponse {
         $data = $this->getOutputData();
         $of = $this->getOf();
-        $response = null;
 
         switch ($of) {
             case 'csv':
@@ -41,7 +40,7 @@ class OfficeResponse extends TextResponse {
             case 'xlsx':
                 $filename = Office::$of($data);
 
-                $response = response()->download(
+                return response()->download(
                     $filename,
                     date('YmdHis').'.'.$of,
                     ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)]
@@ -50,8 +49,7 @@ class OfficeResponse extends TextResponse {
                     ->setStatusCode($this->getStatusCode());
                 break;
         }
-
-        return $response;
+        return null;
     }
 
 }

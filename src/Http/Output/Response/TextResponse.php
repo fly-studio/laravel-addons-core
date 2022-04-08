@@ -202,7 +202,7 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
             case 'yaml': //text
                 $content = Output::$of($data);
 
-                $response = $this->setContent($content)
+                $this->setContent($content)
                     ->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
 
                 break;
@@ -210,7 +210,7 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
             case 'protobuf':
                 $content = $this->toProtobuf()->serializeToString();
 
-                $response = $this->setContent($content)
+                $this->setContent($content)
                     ->header('Content-Type', Mimes::getInstance()->mime_by_ext($of));
 
                 break;
@@ -219,15 +219,14 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
                 $jsonResponse = (new JsonResponse($data, $this->getStatusCode(), [], JSON_PARTIAL_OUTPUT_ON_ERROR))
                     ->withCallback($request->query('callback')); //pajax 必须是GET请求，以免和POST字段冲突
 
-                $response = $this->setContent($jsonResponse->getContent())
+                $this->setContent($jsonResponse->getContent())
                     ->withHeaders($jsonResponse->headers->all())
                     ->header('Content-Type', 'application/json');
 
                 break;
         }
-
-
-        return $response;
+        
+        return $this;
     }
 
     /**
