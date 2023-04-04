@@ -65,7 +65,7 @@ trait ApiTrait {
             $key = !empty($columns[$key]) ? $columns[$key] : $key;
             foreach ($filter as $method => $value)
             {
-                if (empty($value) && !is_numeric($value)) continue; //''不做匹配
+                if (empty($value) && !is_numeric($value) && !is_bool($value)) continue; //''不做匹配
 
                 $operator = $this->apiOperators[$method];
 
@@ -88,7 +88,7 @@ trait ApiTrait {
         $queries = $this->_getQueries($condition);
 
         foreach ($queries as $key => $value)
-            if ((!empty($value) || is_numeric($value)) && method_exists($builder->getModel(), 'scope'.ucfirst($key)))
+            if ((!empty($value) || is_numeric($value) || is_bool($value)) && method_exists($builder->getModel(), 'scope'.ucfirst($key)))
                 call_user_func_array([$builder, $key], Arr::wrap($value));
 
         return $queries;
