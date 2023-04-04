@@ -2,7 +2,6 @@
 
 namespace Addons\Core\Controllers;
 
-use Addons\Core\Events\ControllerEvent;
 use Addons\Core\Controllers\OutputTrait;
 use Illuminate\Routing\Controller as BaseController;
 
