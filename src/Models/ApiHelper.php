@@ -17,8 +17,8 @@ class ApiHelper {
     private array $condition = [];
 
 
-    public static function make(Builder $builder, Request $request): ApiHelper {
-        return new ApiHelper($builder, $request);
+    public static function make(Builder $builder, Request $request): static {
+        return new static($builder, $request);
     }
 
     public function __construct(Builder $builder, Request $request) {
