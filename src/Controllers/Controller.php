@@ -5,24 +5,20 @@ namespace Addons\Core\Controllers;
 use Addons\Core\Events\ControllerEvent;
 use Addons\Core\Controllers\OutputTrait;
 use Illuminate\Routing\Controller as BaseController;
-use Addons\Censor\Validation\ValidatesRequests;
-use Addons\Entrust\Controllers\PermissionTrait;
 
 
 class Controller extends BaseController {
 
-    use PermissionTrait, OutputTrait, ValidatesRequests;
+    use OutputTrait;
 
-    protected $disableUser = false;
-
-    private $enums = [];
+    private $_enums = [];
 
     protected function addEnum(string $class, string $key = null) {
         if (is_null($key)) {
             $key = substr($class, strrpos($class, '\\') + 1);
         }
 
-        $this->enums[$key] = $class;
+        $this->_enums[$key] = $class;
     }
 
     protected function buildEnums()
@@ -44,17 +40,12 @@ class Controller extends BaseController {
                     'description' => $v->description,
                 ];
             }, call_user_func([$class, 'getInstances'])));
-        }, $this->enums);
+        }, $this->_enums);
     }
 
     public function callAction($method, $parameters)
     {
-        // check current user's permissions
-        if (!$this->disableUser)
-            $this->checkPermission($method);
-
         $this->viewData['_enums'] =  $this->buildEnums();
-        $this->viewData['_permissionTable'] = $this->permissionTable;
         $this->viewData['_method'] = $method;
 
         $response = $this->{$method}(...array_values($parameters));
