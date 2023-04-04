@@ -10,7 +10,7 @@ class ApiHelper {
 
     const perPage = 50;
 
-    private Builder $builder = null;
+    private Builder $builder;
     private int $page = 0;
     private int $size = 0;
 
