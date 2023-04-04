@@ -214,10 +214,10 @@ trait ApiTrait {
         {
             return $query->getCountForPagination($query->groups);
             // or
-            $query->columns = $query->groups;
-            return DB::table( DB::raw("({$_b->toSql()}) as sub") )
-                ->mergeBindings($_b->getQuery()) // you need to get underlying Query Builder
-                ->count();
+            // $query->columns = $query->groups;
+            // return DB::table( DB::raw("({$_b->toSql()}) as sub") )
+            //     ->mergeBindings($_b->getQuery()) // you need to get underlying Query Builder
+            //     ->count();
         } else
             return $_b->count();
     }
