@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ApiHelper {
     use ApiTrait;
 
-    const perPage = 50
+    const perPage = 50;
 
     private Builder $builder = null;
     private int $page = 0;
