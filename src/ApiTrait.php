@@ -173,6 +173,7 @@ trait ApiTrait {
 
 		if (!empty($ids = Arr::get($condition, 'withIds', []))) {
 			$_b2 = clone $builder;
+			$this->_doOrders($condition, $_b2, $tables_columns);
 			$list = $_b2->whereIn('id', Arr::wrap($ids))->get($columns);
 
 			$paginate->push(...$list->diff($paginate->getCollection())); // 添加非重复性
