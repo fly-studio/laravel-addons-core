@@ -16,12 +16,9 @@
     ],
     "require": {
         "php": ">=8.0",
-        "illuminate/support": "^9.0",
-        "illuminate/translation": "^9.0",
-        "illuminate/database": "^9.0",
-        "addons/smarty": "~1.0",
-        "addons/func": "~1.0",
-        "addons/censor": "~1.0"
+        "illuminate/support": "^9.0 || ^10.0",
+        "illuminate/translation": "^9.0 || ^10.0",
+        "illuminate/database": "^9.0 || ^10.0"
     },
     "autoload": {
         "psr-4": {

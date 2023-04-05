@@ -7,23 +7,23 @@ use Addons\Core\Contracts\Http\Output\Action;
 
 class ToastAction extends Action {
 
-	protected $timeout;
+    protected $timeout;
 
-	public function __construct(int $timeout = 1500)
-	{
-		$this->timeout = $timeout;
-	}
+    public function __construct(int $timeout = 1500)
+    {
+        $this->timeout = $timeout;
+    }
 
-	public function jsonSerialize()
-	{
-		return $this->toArray();
-	}
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
+    }
 
-	public function toArray()
-	{
-		return [
-			ActionFactory::TOAST, $this->timeout
-		];
-	}
+    public function toArray()
+    {
+        return [
+            ActionFactory::TOAST, $this->timeout
+        ];
+    }
 
 }
