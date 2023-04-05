@@ -9,225 +9,179 @@ use Illuminate\Contracts\Support\Arrayable;
 
 trait PolyfillTrait {
 
-	protected $originalCastTypes = [
-		'int', 'integer', 'real' ,'float', 'double',
-		'string',
-		'bool', 'boolean',
-		'object', 'array', 'json', 'collection',
-		'date', 'datetime', 'timestamp', 'custom_datetime'
-	];
+    public static function insertUpdate(array $attributes)
+    {
+        $model = new static;
+        $model->fill($attributes);
 
-	public static function insertUpdate(array $attributes)
-	{
-		$model = new static;
-		$model->fill($attributes);
-
-		if ($model->usesTimestamps())
-			$model->updateTimestamps();
+        if ($model->usesTimestamps())
+            $model->updateTimestamps();
 
 
-		$attributes = $model->getAttributes();
+        $attributes = $model->getAttributes();
 
-		$query = $model->newBaseQueryBuilder();
-		$processor = $query->getProcessor();
-		$grammar = $query->getGrammar();
+        $query = $model->newBaseQueryBuilder();
+        $processor = $query->getProcessor();
+        $grammar = $query->getGrammar();
 
-		$table = $grammar->wrapTable($model->getTable());
-		$keyName = $model->getKeyName();
-		$columns = $grammar->columnize(array_keys($attributes));
-		$insertValues = $grammar->parameterize($attributes);
+        $table = $grammar->wrapTable($model->getTable());
+        $keyName = $model->getKeyName();
+        $columns = $grammar->columnize(array_keys($attributes));
+        $insertValues = $grammar->parameterize($attributes);
 
-		$updateValues = [];
+        $updateValues = [];
 
-		if ($model->getKeyName() !== null)
-			$updateValues[] = "{$grammar->wrap($keyName)} = LAST_INSERT_ID({$keyName})";
-
-
-		foreach ($attributes as $k => $v)
-			$updateValues[] = sprintf("%s = '%s'", $grammar->wrap($k), $v);
+        if ($model->getKeyName() !== null)
+            $updateValues[] = "{$grammar->wrap($keyName)} = LAST_INSERT_ID({$keyName})";
 
 
-		$updateValues = join(',', $updateValues);
+        foreach ($attributes as $k => $v)
+            $updateValues[] = sprintf("%s = '%s'", $grammar->wrap($k), $v);
 
-		$sql = "insert into {$table} ({$columns}) values ({$insertValues}) on duplicate key update {$updateValues}";
 
-		$id = $processor->processInsertGetId($query, $sql, array_values($attributes));
+        $updateValues = join(',', $updateValues);
 
-		$model->setAttribute($keyName, $id);
+        $sql = "insert into {$table} ({$columns}) values ({$insertValues}) on duplicate key update {$updateValues}";
 
-		return $model;
-	}
+        $id = $processor->processInsertGetId($query, $sql, array_values($attributes));
 
-	/**
-	 * Cast an attribute to a native PHP type.
-	 *
-	 * @param  string  $key
-	 * @param  mixed  $value
-	 * @return mixed
-	 */
-	protected function castAttribute($key, $value)
-	{
-		$type = $this->getCastType($key);
-		if (!empty($type) && !in_array($type, $this->originalCastTypes))
-		{
-			$method = 'as'.Str::studly($type);
-			if (method_exists($this, $method))
-				return call_user_func([$this, $method], $value, $key, $type);
-		}
-		return parent::castAttribute($key, $value);
-	}
+        $model->setAttribute($keyName, $id);
 
-	/**
-	 * Set a given attribute on the model.
-	 *
-	 * @param  string  $key
-	 * @param  mixed  $value
-	 * @return $this
-	 */
-	public function setAttribute($key, $value)
-	{
-		$type = $this->hasCast($key) ? $this->getCastType($key) : null;
-		if (!empty($type) && !$this->hasSetMutator($key)  && !in_array($type, $this->originalCastTypes))
-		{
-			$method = 'from'.Str::studly($type);
-			if (method_exists($this, $method))
-				$value = call_user_func([$this, $method], $value, $key, $type);
-		}
-		return parent::setAttribute($key, $value);
-	}
+        return $model;
+    }
 
-	/**
-	 * 可以在Model转换数组的时候，补充casts字段、appends字段、relations关系，以及修改时间格式
-	 *
-	 * @example
-	 * toArray([
-	 * 	'casts' => [
-	 * 		'other_cast_field1' => 'datetime'
-	 * 		'other_cast_field2' => 'datetime'
-	 * 	],
-	 * 	'appends' => [
-	 * 		'other_append_field1', 'other_append_field2'
-	 * 	],
-	 * 	'relations' => [
-	 * 		'other_relation1',
-	 * 		'other_relation2',
-	 * 	],
-	 * 	'dataFormat' => \DateTime::W3C,
-	 * ])
-	 * @param  array  $options
-	 * @return array
-	 */
-	public function toArray(array $options = [])
-	{
-		$options += [
-			'casts' => [],
-			'appends' => [],
-			'relations' => [],
-			'dateFormat' => null,
-		];
+    /**
+     * 可以在Model转换数组的时候，补充casts字段、appends字段、relations关系，以及修改时间格式
+     *
+     * @example
+     * toArray([
+     * 	'casts' => [
+     * 		'other_cast_field1' => 'datetime'
+     * 		'other_cast_field2' => 'datetime'
+     * 	],
+     * 	'appends' => [
+     * 		'other_append_field1', 'other_append_field2'
+     * 	],
+     * 	'relations' => [
+     * 		'other_relation1',
+     * 		'other_relation2',
+     * 	],
+     * 	'dataFormat' => \DateTime::W3C,
+     * ])
+     * @param  array  $options
+     * @return array
+     */
+    public function toArray(array $options = [])
+    {
+        $options += [
+            'casts' => [],
+            'appends' => [],
+            'relations' => [],
+            'dateFormat' => null,
+        ];
 
-		$data = $this->getArrayableAttributes();
+        $data = $this->getArrayableAttributes();
 
-		$data = $this->addMutatedAttributesToArray(
-			$data, $mutatedAttributes = $this->getMutatedAttributes()
-		);
+        $data = $this->addMutatedAttributesToArray(
+            $data, $mutatedAttributes = $this->getMutatedAttributes()
+        );
 
-		if ($options['casts'] !== false && is_array($options['casts']))
-		{
-			foreach ($this->getCasts() + $options['casts'] as $key => $value) {
+        if ($options['casts'] !== false && is_array($options['casts']))
+        {
+            foreach ($this->getCasts() + $options['casts'] as $key => $value) {
 
-				if (! isset($data[$key]) || in_array($key, $mutatedAttributes)) {
-					continue;
-				}
+                if (! isset($data[$key]) || in_array($key, $mutatedAttributes)) {
+                    continue;
+                }
 
-				$data[$key] = $this->castAttribute(
-					$key, $data[$key]
-				);
+                $data[$key] = $this->castAttribute(
+                    $key, $data[$key]
+                );
 
-				if ($data[$key] &&
-					($value === 'date' || $value === 'datetime')) {
-					$data[$key] = $this->serializeDate($data[$key]);
-				}
+                if ($data[$key] &&
+                    ($value === 'date' || $value === 'datetime')) {
+                    $data[$key] = $this->serializeDate($data[$key]);
+                }
 
-				if ($data[$key] && $this->isCustomDateTimeCast($value)) {
-					$data[$key] = $data[$key]->format(explode(':', $value, 2)[1]);
-				}
+                if ($data[$key] && $this->isCustomDateTimeCast($value)) {
+                    $data[$key] = $data[$key]->format(explode(':', $value, 2)[1]);
+                }
 
-				// execute xxToArray
-				if (isset($data[$key]) && !empty($value) && !in_array($value, $this->originalCastTypes))
-				{
-					$method = Str::camel($value).'ToArray';
-					if (method_exists($this, $method))
-						$data[$key] = call_user_func([$this, $method], $data[$key], $key, $value);
-				}
+                // execute xxToArray
+                if (isset($data[$key]) && !empty($value) && !in_array($value, $this->originalCastTypes))
+                {
+                    $method = Str::camel($value).'ToArray';
+                    if (method_exists($this, $method))
+                        $data[$key] = call_user_func([$this, $method], $data[$key], $key, $value);
+                }
 
-				if ($data[$key] instanceof Arrayable) {
-					$data[$key] = $data[$key]->toArray($options);
-				}
-			}
-		}
+                if ($data[$key] instanceof Arrayable) {
+                    $data[$key] = $data[$key]->toArray($options);
+                }
+            }
+        }
 
-		if ($options['appends'] !== false && is_array($options['appends']))
-		{
-			foreach ($this->getArrayableAppends() + array_combine($options['appends'], $options['appends'])  as $key) {
-				$data[$key] = $this->mutateAttributeForArray($key, null);
-			}
-		}
+        if ($options['appends'] !== false && is_array($options['appends']))
+        {
+            foreach ($this->getArrayableAppends() + array_combine($options['appends'], $options['appends'])  as $key) {
+                $data[$key] = $this->mutateAttributeForArray($key, null);
+            }
+        }
 
-		$dateFormat = !empty($options['dateFormat']) ? $options['dateFormat'] : $this->getDateFormat();
+        $dateFormat = !empty($options['dateFormat']) ? $options['dateFormat'] : $this->getDateFormat();
 
-		foreach ($this->getDates() as $key) {
-			if (! isset($data[$key]) || empty($data[$key])) {
-				continue;
-			}
+        foreach ($this->getDates() as $key) {
+            if (! isset($data[$key]) || empty($data[$key])) {
+                continue;
+            }
 
-			$data[$key] = $this->asDateTime($data[$key])->format($dateFormat);
-		}
+            $data[$key] = $this->asDateTime($data[$key])->format($dateFormat);
+        }
 
-		$attributes = [];
+        $attributes = [];
 
-		if ($options['relations'] !== false && is_array($options['relations']))
-		{
-			if (!empty($options['relations']))
-				$this->loadMissing($options['relations']);
+        if ($options['relations'] !== false && is_array($options['relations']))
+        {
+            if (!empty($options['relations']))
+                $this->loadMissing($options['relations']);
 
-			foreach ($this->getArrayableRelations() as $key => $value) {
+            foreach ($this->getArrayableRelations() as $key => $value) {
 
-				if ($value instanceof Model) {
-					$relation = $value->toArray($options);
-				} else if ($value instanceof Arrayable) {
-					$relation = $value->toArray($options);
-				} else if (is_null($value)) {
-					$relation = $value;
-				}
+                if ($value instanceof Model) {
+                    $relation = $value->toArray($options);
+                } else if ($value instanceof Arrayable) {
+                    $relation = $value->toArray($options);
+                } else if (is_null($value)) {
+                    $relation = $value;
+                }
 
-				if (static::$snakeAttributes) {
-					$key = Str::snake($key);
-				}
+                if (static::$snakeAttributes) {
+                    $key = Str::snake($key);
+                }
 
-				// If the relation value has been set, we will set it on this attributes
-				// list for returning. If it was not arrayable or null, we'll not set
-				// the value on the array because it is some type of invalid value.
-				if (isset($relation) || is_null($value)) {
-					$attributes[$key] = $relation;
-				}
+                // If the relation value has been set, we will set it on this attributes
+                // list for returning. If it was not arrayable or null, we'll not set
+                // the value on the array because it is some type of invalid value.
+                if (isset($relation) || is_null($value)) {
+                    $attributes[$key] = $relation;
+                }
 
-				unset($relation);
-			}
-		}
+                unset($relation);
+            }
+        }
 
-		return $data + $attributes;
-	}
+        return $data + $attributes;
+    }
 
-	/**
-	 * Create a new Eloquent Collection instance.
-	 *
-	 * @param  array  $models
-	 * @return \Illuminate\Database\Eloquent\Collection
-	 */
-	public function newCollection(array $models = [])
-	{
-		return new Collection($models);
-	}
+    /**
+     * Create a new Eloquent Collection instance.
+     *
+     * @param  array  $models
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function newCollection(array $models = [])
+    {
+        return new Collection($models);
+    }
 
 }

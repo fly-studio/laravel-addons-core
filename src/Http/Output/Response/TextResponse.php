@@ -130,7 +130,7 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
             {
                 $acceptable = $request->getAcceptableContentTypes();
 
-                if (isset($acceptable[0]) && Str::contains($acceptable[0], Mimes::getInstance()->mimes_by_ext('proto')))
+                if (isset($acceptable[0]) && Str::contains($acceptable[0], Mimes::getInstance()->getMimeTypes('proto')))
                     $of = 'proto';
                 else
                     $of = 'json';
@@ -203,7 +203,7 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
                 $content = Output::$of($data);
 
                 $this->setContent($content)
-                    ->header('Content-Type', Mimes::getInstance()->mime_by_ext($of).'; charset='.$charset);
+                    ->header('Content-Type', Mimes::getInstance()->getMimeType($of).'; charset='.$charset);
 
                 break;
             case 'proto':
@@ -211,7 +211,7 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
                 $content = $this->toProtobuf()->serializeToString();
 
                 $this->setContent($content)
-                    ->header('Content-Type', Mimes::getInstance()->mime_by_ext($of));
+                    ->header('Content-Type', Mimes::getInstance()->getMimeType($of));
 
                 break;
             default: //其余全部为json
@@ -225,7 +225,7 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
 
                 break;
         }
-        
+
         return $this;
     }
 

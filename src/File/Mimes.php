@@ -2,56 +2,37 @@
 
 namespace Addons\Core\File;
 
-class Mimes {
+use Symfony\Component\Mime\MimeTypes;
 
-	private $mimes;
-	 /**
-	 * The singleton instance.
-	 *
-	 * @var ExtensionGuesser
-	 */
-	private static $instance = null;
+final class Mimes {
 
-	public function __construct()
-	{
-		$this->mimes = (array)config('mimes');
-	}
+    private $mimes;
+     /**
+     * The singleton instance.
+     *
+     * @var ExtensionGuesser
+     */
+    private static $instance = null;
 
-	/**
-	 * Returns the singleton instance.
-	 *
-	 * @return ExtensionGuesser
-	 */
-	public static function getInstance()
-	{
-		if (null === self::$instance) {
-			self::$instance = new self();
-		}
+    public function __construct() {
+        $this->mimes = new MimeTypes(config('mimes'));
+    }
 
-		return self::$instance;
-	}
+    /**
+     * Returns the singleton instance.
+     *
+     * @return ExtensionGuesser
+     */
+    public static function getInstance(): self {
+        return self::$instance ??= new self();
+    }
 
-	public function mime_by_ext(string $ext)
-	{
-		return isset($this->mimes[strtolower($ext)]) ? $this->mimes[strtolower($ext)][0] : null;
-	}
+    public function getMimeType(string $ext) {
+        $mimes = $this->getMimeTypes($ext);
+        return !empty($mimes) ? $mimes[0] : null;
+    }
 
-	public function mimes_by_ext(string $ext)
-	{
-		return $this->mimes[strtolower($ext)] ?? null;
-	}
-
-	public function ext_by_mime(string $mime)
-	{
-		foreach ($this->mimes as $key => $value)
-			if (in_array($mime, $value))
-				return $key;
-
-		return null;
-	}
-
-	public function get_mimes()
-	{
-		return $this->mimes;
-	}
+    public function getMimeTypes(string $ext) {
+        return $this->mimes->getMimeTypes($ext);
+    }
 }

@@ -6,16 +6,16 @@ use Illuminate\Database\Eloquent\Collection;
 
 class HasOneBy extends HasOneOrManyBy {
 
-	public function getResults()
-	{
-		if (is_null($this->getParentKey())) {
-			return null;
-		}
+    public function getResults()
+    {
+        if (is_null($this->getParentKey())) {
+            return null;
+        }
 
-		return $this->getEager()->first();
-	}
+        return $this->getEager()->first();
+    }
 
-	/**
+    /**
      * Initialize the relation on a set of models.
      *
      * @param  array   $models

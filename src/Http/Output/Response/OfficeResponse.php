@@ -43,7 +43,7 @@ class OfficeResponse extends TextResponse {
                 return response()->download(
                     $filename,
                     date('YmdHis').'.'.$of,
-                    ['Content-Type' =>  Mimes::getInstance()->mime_by_ext($of)]
+                    ['Content-Type' =>  Mimes::getInstance()->getMimeType($of)]
                 )
                     ->deleteFileAfterSend(true)
                     ->setStatusCode($this->getStatusCode());

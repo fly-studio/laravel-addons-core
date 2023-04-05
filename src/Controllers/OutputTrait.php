@@ -6,7 +6,5 @@ use Addons\Core\Controllers\Concerns\ViewTrait;
 use Addons\Core\Controllers\Concerns\OutputResponseTrait;
 
 trait OutputTrait {
-
-	use ViewTrait, OutputResponseTrait;
-
+    use ViewTrait, OutputResponseTrait;
 }
