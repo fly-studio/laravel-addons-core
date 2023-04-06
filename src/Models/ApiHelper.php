@@ -44,15 +44,35 @@ class ApiHelper {
             $request = new Request();
         }
         $this->builder = $builder;
-        $this->filters($request->input('f'));
-        $this->orders($request->input('o'));
-        $this->queries($request->input('q'));
-        $this->page($request->input('page') ?? 1);
-        $this->perPage($request->input('size') ?? static::defaultPerPage);
+        $input = $this->getRequestInput($request);
+        $this->filters($input['f'] ??  []);
+        $this->orders($input['o'] ??  []);
+        $this->queries($input['q'] ??  []);
+        $this->page($request->input('page', 1));
+        $this->perPage($request->input('size', static::defaultPerPage));
 
         if (boolval($request->input('all'))) {
             $this->perPage(PHP_INT_MAX);
         }
+    }
+
+    protected function getRequestInput(Request $request): array|null {
+        $input = $request->input();
+
+        $result = [];
+        foreach($input as $key => $value) {
+            switch(substr($key, 0, 3)) {
+                case 'f':
+                case 'o':
+                case 'q':
+                case 'f__':
+                case 'o__':
+                case 'q__':
+                    $result[$key] = $value;
+                    break;
+            }
+        }
+        return $this->array_underscore($result);
     }
 
     protected function columns(string $tableName) {
