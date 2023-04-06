@@ -2,28 +2,42 @@
 
 namespace Addons\Core\Models;
 
-use Addons\Core\Models\Builder as ModelsBuilder;
-use Schema, DB;
-use ArrayAccess;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
+/**
+ * 这是一个用于Request QueryString的Model搜索并输出的工具，并不是为了替代Model::where()、get()、find()、findMany()
+ * 比如：?f__name=Alice&o__created_at=desc&q__status=active
+ * 关于空字符串
+ * 由于Form构造GET请求时，QueryString中会有空字符串的情况出现，比如：?f__name=&f__gender=male，这种情况表示f__name无效。
+ * 所以filters(['name'=>''])时，会忽略name的条件。
+ * 如果的确需要启用空字符串、或null，可以使用where('name', '')，where('name', 'is', null);
+ * query同理
+ *
+ */
 class ApiHelper {
 
     const defaultPerPage = 50;
+    private const F_EMPTY_STRING = '__F_EMPTY_STRING__';
+    private const F_NULL = '__F_NULL__';
 
-    private Builder $builder;
-    private int $page = 0;
-    private int $perPage = 0;
+    protected Builder $builder;
+    protected int $page = 0;
+    protected int $perPage = 0;
 
-    private array $queries = [];
-    private array $filters = [];
-    private array $orders = [];
+    protected array $columnsCache = [];
 
-    protected $apiOperators = [
+    protected array $queries = [];
+    protected array $filters = [];
+    protected array $orders = [];
+
+    protected static $operatorsTable = [
         '0' => '>=', '1' => '<=',
         'in' => 'in', 'nin' => 'not in', 'is' => 'is',
         'min' => '>=', 'gte' => '>=', 'max' => '<=', 'lte' => '<=', 'btw' => 'between', 'nbtw' => 'not between', 'gt' => '>', 'lt' => '<',
@@ -46,47 +60,46 @@ class ApiHelper {
         $this->builder = $builder;
         $input = $this->getRequestInput($request);
         $this->filters($input['f'] ??  []);
-        $this->orders($input['o'] ??  []);
         $this->queries($input['q'] ??  []);
+        $this->orders($input['o'] ??  []);
         $this->page($request->input('page', 1));
         $this->perPage($request->input('size', static::defaultPerPage));
-
-        if (boolval($request->input('all'))) {
-            $this->perPage(PHP_INT_MAX);
-        }
     }
 
+    /**
+     * 获取和api helper相关的request参数
+     */
     protected function getRequestInput(Request $request): array|null {
         $input = $request->input();
 
         $result = [];
         foreach($input as $key => $value) {
-            switch(substr($key, 0, 3)) {
-                case 'f':
-                case 'o':
-                case 'q':
-                case 'f__':
-                case 'o__':
-                case 'q__':
-                    $result[$key] = $value;
-                    break;
+            if (in_array(substr($key, 0, 3), ['f', 'o', 'q', 'f__', 'o__', 'q__'])) {
+                $result[$key] = $value;
             }
         }
         return $this->array_underscore($result);
     }
 
-    protected function columns(string $tableName) {
+    /**
+     * 获取某table的所有字段列表，如果输入别名$alias，则返回字段名会变成：$alias.$column
+     */
+    protected function getColumns(string $tableName, string $alias = null) {
         static $table_columns;
 
         if (!isset($table_columns[$tableName]))
             $table_columns[$tableName] = Schema::getColumnListing($tableName);
             //$table_columns[$table] = $query->getConnection()->getDoctrineSchemaManager()->listTableColumns($table);
 
-        return $table_columns[$tableName];
+        return !empty($alias)
+            ? array_map(fn($column) => $alias .'.'.$column, $table_columns[$tableName])
+            : $table_columns[$tableName];
     }
 
-    protected function getColumnAlias()
-    {
+    /**
+     * 获取当前builder的table名列表：['table1', 'table2', ...]
+     */
+    protected function getTables() {
         $query = $this->builder->getQuery();
         $tables = [$query->from];
 
@@ -96,84 +109,200 @@ class ApiHelper {
             }
         }
 
-        $_columns = [];
-        foreach ($tables as $name) {
-            list($table, $alias) = strpos(strtolower($name), ' as ') !== false ? explode(' as ', $name) : [$name, $name];
-
-            foreach ($this->columns($table) as $field)
-                $_columns[$field] = isset($_columns[$field]) ? $_columns[$field] : $alias.'.'.$field;
-        }
-        return $_columns;
+        return $tables;
     }
 
     /**
-     * 给Builder绑定where条件
-     * 注意：参数的值为空字符串，则会忽略该条件
-     *
-     * @return array           返回筛选(搜索)的参数
+     * 获取当前builder的tables列表
+     * [alias => table]
      */
-    private function _doFilters(Builder $builder, array $columnAlias = []): Builder
-    {
-        foreach ($this->filters as $key => $condition)
-        {
-            $key = !empty($columnAlias[$key]) ? $columnAlias[$key] : $key;
-            foreach ($condition as $operator => $value)
-            {
-                if (empty($value) && !is_numeric($value) && !is_bool($value))
-                    continue; //''不做匹配
+    protected function getTableAlias() {
+        $tables = [];
+        foreach ($this->getTables() as $name) {
+            [$table, $alias] = strpos(strtolower($name), ' as ') !== false ? explode(' as ', $name) : [$name, $name];
+            $tables[$alias] = $table;
+        }
 
-                if (in_array($operator, ['like', 'like binary', 'not like', 'not like binary']))
-                    $value = '%'.trim($value, '%').'%'; //添加开头结尾的*
+        return $tables;
+    }
 
-                if ($operator == 'in')
-                    $builder->whereIn($key, $value);
-                else if ($operator == 'not in')
-                    $builder->whereNotIn($key, $value);
-                else
-                    $builder->where($key, $operator ?: '=' , $value);
+    /**
+     * 获取完整的字段列表，如果遇到相同字段，以前面的表的字段为准
+     * [column => alias.column]
+     */
+    protected function getColumnAlias(): array {
+        // 一个builder 只需要读取一次
+        if (!empty($this->columnsCache)) {
+            return $this->columnsCache;
+        }
+
+        $columns = [];
+        $tables = $this->getTableAlias();
+        foreach($tables as $alias => $table) {
+            foreach ($this->getColumns($table) as $column) {
+                // 如果遇到相同字段以前面的表的字段为准
+                $columns[$column] = isset($columns[$column]) ? $columns[$column] : $alias.'.'.$column;
             }
         }
 
-        return $builder;
+        return $this->columnsCache = $columns;
     }
 
-    private function _doQueries(Builder $builder): Builder
-    {
+    /**
+     * 将一个columns数组转为正常的
+     */
+    public function columnsToFull(array $columns): array {
+        $tableAlias = $this->getTableAlias(); // [alias => table]
+        $columnAlias = $this->getColumnAlias(); // [field => alias.column]
+
+        $realColumns = [];
+        foreach($columns as $column) {
+            if ($column == '*') { // 是 *，加入所有tables的字段
+                foreach($tableAlias as $alias => $table) {
+                    $realColumns = array_merge($realColumns, $this->getColumns($table, $alias));
+                }
+            } else if (strpos($column, '.*') !== false) { // 是table.*（没有严格校验），加入该table的所有字段
+                [$alias, ] = explode('.', $column, 2);
+                $realColumns = array_merge($realColumns, $this->getColumns($tableAlias[$alias] ?? $alias, $alias));
+            } else {
+                $realColumns[] = $columnAlias[$column] ?? $column;
+            }
+        }
+
+        return $realColumns;
+    }
+
+
+    /**
+     * 给Builder绑定where条件
+     *
+     * @return static
+     */
+    private function _doFilters(Builder $builder): static {
+        $columnAlias = $this->getColumnAlias();
+        foreach ($this->filters as $field => $condition)
+        {
+            $field = $columnAlias[$field] ?? $field;
+            foreach ($condition as $operator => $value)
+            {
+                if (empty($value) && !is_numeric($value) && !is_bool($value))
+                    continue; // ''不做匹配
+
+                if ($value == static::F_EMPTY_STRING)
+                    $value = '';
+                else if ($value == static::F_NULL)
+                    $value = null;
+
+                if (in_array($operator, ['like', 'like binary', 'not like', 'not like binary'])) {
+                    if (strpos($value, '%') === false) {
+                        $value = '%'.$value.'%';
+                    }
+                }
+
+                if ($operator == 'in')
+                    $builder->whereIn($field, $value);
+                else if ($operator == 'not in')
+                    $builder->whereNotIn($field, $value);
+                else
+                    $builder->where($field, $operator ?: '=' , $value);
+            }
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * 给Builder绑定scopeXXX的条件
+     * 注意：参数的值为空字符串，会忽略该条件
+     *
+     * @return Builder
+     */
+    private function _doQueries(Builder $builder): static {
         foreach ($this->queries as $key => $value) {
             if ((!empty($value) || is_numeric($value) || is_bool($value))
                 && method_exists($builder->getModel(), 'scope'.ucfirst($key))) {
+
+                if ($value == static::F_EMPTY_STRING)
+                    $value = '';
+                else if ($value == static::F_NULL)
+                    $value = null;
+
                 call_user_func_array([$builder, $key], Arr::wrap($value));
             }
         }
 
-        return $builder;
+        return $this;
     }
 
-    private function _doOrders(Builder $builder, $columnAlias = []): Builder
-    {
-        foreach ($this->orders as $key => $value) {
-            $builder->orderBy(isset($columnAlias[$key]) ? $columnAlias[$key] : $key, $value);
+    /**
+     * 给Builder绑定orderBy的条件
+     *
+     * @return static
+     */
+    private function _doOrders(Builder $builder): static {
+        $columnAlias = $this->getColumnAlias();
+        $orders = $this->orders ?: [$this->builder->getModel()->getKeyName() => 'desc'];
+        foreach ($orders as $key => $value) {
+            $builder->orderBy($columnAlias[$key] ?? $key, $value);
         }
 
-        return $builder;
+        return $this;
     }
 
+    /**
+     * 给Builder绑定offset、limit的条件
+     */
+    private function _doPage(Builder $builder, int $page = null, int $perPage = null): static {
+        $page = $page ?? $this->page;
+        $perPage = $perPage ?? $this->perPage;
+
+        $builder->offset(($page - 1) * $perPage);
+        $builder->limit($perPage);
+
+        return $this;
+    }
+
+    /**
+     * 设置页码，注意页码是从1开始
+     */
     public function page(int $page): static {
         $this->page = $page <= 0 ? 1 : $page;
         return $this;
     }
 
+    /**
+     * 设置每页的数量
+     */
     public function perPage(int $perPage): static {
-        $this->perPage = $perPage <=0 ? static::perPage : $perPage;
+        $this->perPage = $perPage <=0 ? static::defaultPerPage : $perPage;
         return $this;
     }
 
+    /**
+     * 设置Builder
+     */
     public function builder(Builder $builder): static {
         $this->builder = $builder;
+        $this->columnsCache = []; // 清理当前的columnsCache
         return $this;
     }
 
-    public function filter(string $field, mixed $operator, mixed $value = null): static {
+    /**
+     * 设置一个筛选条件，$operator支持Model的where的操作符。
+     * 别名$operator参考顶部的operatorsTable
+     *
+     * @param string $field 字段名
+     * @param string|mixed $operator 条件，比如：like、lk、eq、=、gte、>=
+     * @param mixed $value 条件需要的值
+     * @param bool $strict 严格模式下，value为'' 或 null，会在执行是跳过
+     *
+     * @example / 如果只输入2个参数，表示$operator是=，比如：where('name', 'Alice');
+     * @example / 如果$operator为like，并且$value中没有%，会自动添加百分号在前后：%Alice%，比如：where('name', 'like', 'Alice');
+     * @example / 支持null：where('name', 'is', null)、where('name', 'is not', null)
+     * @example / 支持空字符串：where('name', '')、where('name', '>=', '')
+     */
+    public function where(string $field, mixed $operator, mixed $value = null, bool $strict = false): static {
         if (!isset($this->filters[$field]))
             $this->filters[$field] = [];
 
@@ -183,22 +312,69 @@ class ApiHelper {
         }
 
         $operator = strtolower($operator);
-        $operator = $this->apiOperators[$operator] ?? $operator;
+        $operator = static::$operatorsTable[$operator] ?? $operator;
+
+        if (!$strict) {
+            if ($value === '') {
+                $value = static::F_EMPTY_STRING;
+            } else if (is_null($value)) {
+                $value = static::F_NULL;
+            }
+        }
 
         $this->filters[$field][$operator] = $value;
         return $this;
     }
 
-    public function query(string $field, mixed $value = null): static {
+    public function whereNull(string $field): static {
+        return $this->where($field, 'is', null);
+    }
+
+    public function whereNotNull(string $field): static {
+        return $this->where($field, 'is not', null);
+    }
+
+    /**
+     * 设置一个scopeXX的筛选条件
+     *
+     * @param string $field 字段名
+     * @param mixed value 调用scopeXX时的参数，可以为1项，或者数组
+     * @param bool $strict 严格模式下，value为'' 或 null，会在执行是跳过
+     *
+     * @example / query('ofStatus', 'active') 将调用Model中的：scopeOfStatus($builder, 'active')
+     * @example / query('ofStatus', ['active', 'inactive']) 将调用Model中：scopeOfStatus($builder, 'active', 'inactive')
+     */
+    public function query(string $field, mixed $value = null, bool $strict = false): static {
+        if (!$strict) {
+            if ($value === '') {
+                $value = static::F_EMPTY_STRING;
+            } else if (is_null($value)) {
+                $value = static::F_NULL;
+            }
+        }
+
         $this->queries[$field] = $value;
         return $this;
     }
 
-    public function order(string $field, string $ascDesc = 'asc'): static {
-        $this->orders[$field] = $ascDesc;
+    /**
+     * 设置一个order by
+     *
+     * @param string $field 字段名
+     * @param string $ascDesc asc 或 desc，其它会强转为asc
+     *
+     * @example / orderBy('name', 'desc')
+     */
+    public function orderBy(string $field, ?string $ascDesc = 'asc'): static {
+        $ascDesc = strtolower($ascDesc ?? '');
+        $this->orders[$field] = in_array($ascDesc, ['asc', 'desc']) ? $ascDesc : 'asc';
         return $this;
     }
 
+    /**
+     * 通过__来切割1维数组为多维数组，注意：不会递归切割，只切割1维
+     * 注意：由于.在数据库中是表名.字段的连接符，所以必须使用__为分隔符。参考的Django
+     */
     private function array_underscore(array $from): array {
         $result = [];
 
@@ -229,21 +405,24 @@ class ApiHelper {
 
     /**
      * 设置筛选(搜索)的参数
-     * URL中参数示例：&f[username][lk]=abc&f[gender][eq]=1
-     * @param array|null $filters
-     * @example under score key ['name__like' => 'abc']
-     * @example nested key ['name' => ['like' => 'abc']]
+     *
+     * @param array|null $filters 支持2种格式
+     *
+     * @example / 中括号： ?f[username][lk]=abc&f[gender][eq]=1
+     * @example / 下划线： ?f__username__lk=abc&f__gender__eq=1 可以混合使用
+     * @example / under score key ['name__like' => 'abc']
+     * @example / nested key ['name' => ['like' => 'abc']]
      */
     public function filters(?array $filters): static {
         $this->filters = [];
         if (empty($filters))
             return $this;
 
-        $result = $this->array_underscore($filters);
-        foreach ($result as $field => $condition) {
+        $_filters = $this->array_underscore($filters);
+        foreach ($_filters as $field => $condition) {
             $_condition = is_array($condition) ? $condition : ['=' => $condition];
             foreach ($_condition as $operator => $value) {
-                $this->filter($field, $operator, $value);
+                $this->where($field, $operator, $value, strict:true);
             }
         }
 
@@ -252,21 +431,34 @@ class ApiHelper {
 
     /**
      * 设置排序的参数
-     * 1. datatable 的方式
-     * 2. URL中参数示例：&o[id]=desc&o[created_at]=asc 类似这种方式
-     * 默认是按主键倒序
+     * @example URL中参数示例：?o[id]=desc&o[created_at]=asc，或?o__id=desc&o__created_at=asc 可以混合使用
      */
     public function orders(?array $orders): static {
-        $this->orders = !empty($orders) ? $orders : [$this->builder->getModel()->getKeyName() => 'desc'];
+        $this->orders = [];
+        if (empty($orders))
+            return $this;
+
+        foreach($orders ?? [] as $field => $ascDesc) {
+            $this->orderBy($field, $ascDesc);
+        }
         return $this;
     }
 
     /**
-     * 获取全文搜索的参数
-     * URL中参数示例：&q[ofPinyin]=abc
+     * 获取基于scopeXX的搜索的参数
+     *
+     * @example / 中括号示例1：?q[ofStatus]=active，将调用Model中：scopeOfStatus($builder, 'active')
+     * @example / 下划线示例2：?q__ofStatus=active，将调用Model中：scopeOfStatus($builder, 'active')
+     * @example / 多参数示例3：?q__ofStatus[]=active&q__ofStatus[]=inactive，将调用Model中：scopeOfStatus($builder, 'active', 'inactive')
      */
     public function queries(?array $queries): static {
-        $this->queries = !empty($queries) ? $queries : [];
+        $this->queries = [];
+        if (empty($queries))
+            return $this;
+
+        foreach($queries ?? [] as $field => $value) {
+            $this->query($field, $value, strict:true);
+        }
         return $this;
     }
 
@@ -276,8 +468,7 @@ class ApiHelper {
 
         if ($withFilters)
         {
-            $columnAlias = $this->getColumnAlias();
-            $this->_doFilters($_b, $columnAlias);
+            $this->_doFilters($_b);
             $this->_doQueries($_b);
         }
 
@@ -295,26 +486,142 @@ class ApiHelper {
             return $_b->count();
     }
 
-    public function paginate(array $columns = ['*']): LengthAwarePaginator
-    {
-        $_b = clone $this->builder;
+    public function getSelectColumns(array|string $columns, array $exclude_columns): array {
+        if (!empty($exclude_columns)) {
+            $columns = $this->columnsToFull(Arr::wrap($columns));
+            $exclude_columns = $this->columnsToFull($exclude_columns);
 
-        $columnAlias = $this->getColumnAlias($_b);
-        $filters = $this->_doFilters($_b, $columnAlias);
-        $queries = $this->_doQueries($_b);
-        $orders = $this->_doOrders($_b, $columnAlias);
-
-        $paginate = $_b->paginate($this->perPage, $columns, 'page', $this->page);
-
-        $paginate->filters = $filters;
-        $paginate->queries = $queries;
-        $paginate->orders = $orders;
-        return $paginate;
+            return array_diff($columns, $exclude_columns);
+        } else {
+            return $columns;
+        }
     }
 
-    public function data(callable $callback = null, array $columns = ['*']): array|null {
+    /**
+     * 类似于Model::find($id)，额外有exclude_columns参数，可以在SELECT侧过滤字符
+     * 按条件、以及指定ID的获取Model数据
+     * 会启用filters等条件(原Model也可以在find前设置条件)
+     *
+     * 类似于Model::where(filters...)
+     *  ->scopeXX(queries...)
+     *  ->limit($this->perPage)
+     *  ->find($id);
+     */
+    public function find(mixed $id, array|string $columns = ['*'], array $exclude_columns = []): Model {
+        $_b = clone $this->builder;
 
-        $paginate = $this->paginate($columns);
+        $this->_doFilters($_b)
+            ->_doQueries($_b);
+
+        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        return $_b->find($id, $columns);
+    }
+
+    /**
+     * 类似于Model::findMany($ids)，额外有exclude_columns参数，可以在SELECT侧过滤字符
+     * 按条件、以及指定IDs的获取Model集合数据
+     * 会启用filters等条件、以及page，perPage(原Model也可以在findMany前设置条件)
+     *
+     * 类似于Model::where(filters...)
+     *  ->scopeXX(queries...)
+     *  ->orderBy(orders...)
+     *  ->offset((page - 1) * perPage)
+     *  ->limit($this->perPage)
+     *  ->findMany($ids);
+     */
+    public function findMany(Arrayable|array $ids, array|string $columns = ['*'], array $exclude_columns = []): Collection {
+        $_b = clone $this->builder;
+
+        $this->_doFilters($_b)
+            ->_doQueries($_b)
+            ->_doOrders($_b);
+
+        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        return $_b->findMany($ids, $columns);
+    }
+
+    /**
+     * 按条件获取第一条Model数据，会启用page，perPage，即offset=(page-1)*perPage
+     * 类似于Model::where(filters...)
+     *  ->scopeXX(queries...)
+     *  ->orderBy(orders...)
+     *  ->offset((page - 1) * perPage)
+     *  ->limit(1)
+     *  ->get()->first();
+     */
+    public function first(array|string $columns = ['*'], array $exclude_columns = []): Model | null {
+        $_b = clone $this->builder;
+
+        $this->_doFilters($_b)
+            ->_doQueries($_b)
+            ->_doOrders($_b)
+            ->_doPage($_b);
+
+        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        return $_b->first($columns);
+    }
+
+    /**
+     * 按条件获取Model集合数据，会启用page，perPage
+     * 类似于Model::where(filters...)
+     *  ->scopeXX(queries...)
+     *  ->orderBy(orders...)
+     *  ->offset((page - 1) * perPage)
+     *  ->limit(perPage)
+     *  ->get()
+     */
+    public function get(array|string $columns = ['*'], array $exclude_columns = []): Collection {
+        $_b = clone $this->builder;
+
+        $this->_doFilters($_b)
+            ->_doQueries($_b)
+            ->_doOrders($_b)
+            ->_doPage($_b);
+
+        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        return $_b->get($columns);
+    }
+
+    /**
+     * 按条件获取Model集合的全量数据，不会启用page，perPage
+     * 类似于Model::where(filters...)
+     *  ->scopeXX(queries...)
+     *  ->orderBy(orders...)
+     *  ->get();
+     */
+    public function all(array|string $columns = ['*'], array $exclude_columns = []): Collection {
+        $_b = clone $this->builder;
+
+        $this->_doFilters($_b)
+            ->_doQueries($_b)
+            ->_doOrders($_b);
+
+        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        return $_b->get($columns);
+    }
+
+
+    /**
+     * 按条件获取分页的对象（LengthAwarePaginator）
+     * @return LengthAwarePaginator
+     */
+    public function paginate(array|string $columns = ['*'], array $exclude_columns = []): LengthAwarePaginator {
+        $_b = clone $this->builder;
+
+        $this->_doFilters($_b)
+            ->_doQueries($_b)
+            ->_doOrders($_b);
+
+        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        return $_b->paginate($this->perPage, $columns, 'page', $this->page);
+    }
+
+    /**
+     * 按条件获取分页的数据（array），包含：分页、数据、设置的各项条件、排序
+     * @return array
+     */
+    public function data(callable $callback = null, array|string $columns = ['*'], array $exclude_columns = []): array {
+        $paginate = $this->paginate($columns, $exclude_columns);
 
         if (is_callable($callback))
             call_user_func_array($callback, [$paginate]); // reference Objecy
@@ -322,17 +629,22 @@ class ApiHelper {
         return $paginate->toArray() + ['filters' => $this->filters, 'queries' => $this->queries, 'orders' => $this->orders];
     }
 
-    public function export(callable $callback = null, array $columns = ['*']): array|null {
+    /**
+     * 按条件获取一个可以导出的数据（array），包含：导出元数据、表头、数据。
+     * 注意：会启用page、perPage
+     * @return array
+     */
+    public function export(callable $callback = null, array|string $columns = ['*'], array $exclude_columns = []): array {
 
         set_time_limit(600); // 10 min
 
         $_b = clone $this->builder;
 
-        $columnAlias = $this->getColumnAlias();
-        $this->_doFilters($_b, $columnAlias);
-        $this->_doQueries($_b);
-        $this->_doOrders($_b);
+        $this->_doFilters($_b)
+            ->_doQueries($_b)
+            ->_doOrders($_b);
 
+        $columns = $this->getSelectColumns($columns, $exclude_columns);
         $paginate = $_b->paginate($this->perPage, $columns);
 
         if (is_callable($callback))
@@ -348,11 +660,16 @@ class ApiHelper {
         return $data['data'];
     }
 
-    public function datable(callable $callback = null, array $columns = ['*']): array|null {
+    /**
+     * 按条件获取支持datable使用的分页数据（array）
+     */
+    public function datable(callable $callback = null, array $columns = ['*'], array $exclude_columns = []): array|null {
+        // 不带 f q 条件的总数
         $total = $this->count();
-        $data = $this->data($callback, $columns);
-        $data['recordsTotal'] = $total; //不带 f q 条件的总数
-        $data['recordsFiltered'] = $data['filter']; //带 f q 条件的总数
+        $data = $this->data($callback, $columns, $exclude_columns);
+
+        $data['recordsTotal'] = $total; // 不带 f q 条件的总数
+        $data['recordsFiltered'] = $data['total']; // 带 f q 条件的总数
         return $data;
     }
 
