@@ -2,15 +2,15 @@
 
 namespace Addons\Core\Http\Output\Response;
 
+use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Support\Arr;
 use Addons\Core\Http\Output\Response\TextResponse;
 
 class ApiResponse extends TextResponse {
 
-    public function getOf()
+    public function getOf(): string
     {
-        if ($this->of == 'auto')
-        {
+        if ($this->of == 'auto') {
             $request = app('request');
             $of = $request->input('of', null);
 
@@ -23,12 +23,12 @@ class ApiResponse extends TextResponse {
         return $this->of;
     }
 
-    public function getMessage()
+    public function getMessage(): Translator|array|null|string
     {
         return null;
     }
 
-    public function getOutputData()
+    public function getOutputData(): ?array
     {
         return Arr::except(parent::getOutputData(), ['action', 'message']);
     }

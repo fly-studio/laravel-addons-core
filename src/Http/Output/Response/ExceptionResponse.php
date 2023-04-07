@@ -13,7 +13,7 @@ class ExceptionResponse extends TextResponse {
         return $this->exception;
     }
 
-    public function getOutputData()
+    public function getOutputData(): ?array
     {
         $data = parent::getOutputData();
 

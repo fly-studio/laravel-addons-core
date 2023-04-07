@@ -2,23 +2,37 @@
 
 namespace Addons\Core\Tools;
 
+use Addons\Core\Contracts\Http\Output\ExcelOptions;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xls;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class Office {
 
-    public static function excel(array $data, string $ext = 'xlsx', string $filepath = null)
+    public static function excel(array $data, string $ext = 'xlsx', string $filepath = null, ExcelOptions $excelOptions = null): string
     {
         $excel = new Spreadsheet();
         $excel->setActiveSheetIndex(0);
         $sheet = $excel->getActiveSheet();
 
-        array_walk($data, function(&$v){
-            foreach ($v as $key => $value)
-                !is_scalar($value) && $v[$key] = @strval($value);
+        // 将非标量，强制转为字符串
+        array_walk($data, function(&$item){
+            foreach ($item as $key => $value) {
+                !is_scalar($value) && $item[$key] = @strval($value);
+            }
         });
+
+        // 设置标题栏，列宽度
+        if (isset($data[0])) {
+            array_unshift($data, $excelOptions->columnNames ?: array_keys($data['data'][0])); // 标题栏
+
+            foreach ($excelOptions->columnWidths ?: [] as $col => $width) {
+                $column = is_int($col) ? Coordinate::stringFromColumnIndex($col + 1) : $col;
+                $sheet->getColumnDimension($column)->setWidth($width);
+            }
+        }
 
         $sheet->fromArray($data);
 
@@ -47,19 +61,19 @@ class Office {
         return $filepath;
     }
 
-    public static function csv(array $data, string $filepath = null)
+    public static function csv(array $data, string $filepath = null, ExcelOptions $excelOptions = null): string
     {
-        return self::excel($data ,'csv', $filepath);
+        return self::excel($data ,'csv', $filepath, excelOptions:$excelOptions);
     }
 
-    public static function xls(array $data, string $filepath = null)
+    public static function xls(array $data, string $filepath = null, ExcelOptions $excelOptions = null): string
     {
-        return self::excel($data ,'xls', $filepath);
+        return self::excel($data ,'xls', $filepath, excelOptions:$excelOptions);
     }
 
-    public static function xlsx(array $data, string $filepath = null)
+    public static function xlsx(array $data, string $filepath = null, ExcelOptions $excelOptions = null): string
     {
-        return self::excel($data ,'xlsx', $filepath);
+        return self::excel($data ,'xlsx', $filepath, excelOptions:$excelOptions);
     }
 
 }

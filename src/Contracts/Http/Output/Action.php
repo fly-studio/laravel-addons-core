@@ -30,27 +30,25 @@ abstract class Action implements JsonSerializable, ArrayAccess, Arrayable
         return $this->__get($key);
     }
 
-    public function offsetExists($key)
+    public function offsetExists($key): bool
     {
         return $this->__isset($key);
     }
 
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $value): void
     {
-        return null;
     }
 
-    public function offsetUnset($key)
+    public function offsetUnset($key): void
     {
-        return null;
     }
 
-    public function __get($key)
+    public function __get($key): mixed
     {
         return property_exists($this, $key) ? $this->$key : null;
     }
 
-    public function __isset($key)
+    public function __isset($key): bool
     {
         return property_exists($this, $key);
     }

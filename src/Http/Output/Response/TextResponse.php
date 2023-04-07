@@ -2,7 +2,11 @@
 
 namespace Addons\Core\Http\Output\Response;
 
-use Lang, Auth;
+use Addons\Core\Contracts\Http\Output\Action;
+use Illuminate\Contracts\Translation\Translator;
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Auth;
+
 use Carbon\Carbon;
 use JsonSerializable;
 use Illuminate\Support\Str;
@@ -22,16 +26,16 @@ use Addons\Core\Structs\Protobuf\Action as ActionProto;
 
 class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializable {
 
-    protected $request = null;
-    protected $data = null;
-    protected $of = 'auto';
+    protected ?Request $request = null;
+    protected mixed $data = null;
+    protected string $of = 'auto';
     protected $message = null;
-    protected $action = null;
+    protected ?Action $action = null;
     protected $uid = null;
-    protected $code = 0;
+    protected string|int $code = 0;
     protected $viewFile = null;
 
-    public function data($data, bool $raw = false)
+    public function data(mixed $data, bool $raw = false): static
     {
         $data = $raw ? $data : json_decode(json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR), true); //turn Object to Array
 
@@ -39,7 +43,7 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
         return $this;
     }
 
-    public function message(?string $message_name, array $transData = null)
+    public function message(?string $message_name, array $transData = null): static
     {
         if (empty($message_name))
         {
@@ -70,55 +74,55 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
         return $this;
     }
 
-    public function rawMessage(?string $message)
+    public function rawMessage(?string $message): static
     {
         $this->message = $message;
         return $this;
     }
 
-    public function action(...$action)
+    public function action(...$action): static
     {
         $this->action = (new ActionFactory())->make(...$action);
         return $this;
     }
 
-    public function code(int|string $code)
+    public function code(int|string $code): static
     {
         $this->code = $code;
 
         return $this;
     }
 
-    public function request(?Request $request)
+    public function request(?Request $request): static
     {
         $this->request = $request;
         return $this;
     }
 
-    public function uid(?int $uid)
+    public function uid(?int $uid): static
     {
         $this->uid = $uid;
         return $this;
     }
 
-    public function of(?string $of)
+    public function of(?string $of): static
     {
         $this->of = $of;
         return $this;
     }
 
-    public function view($view_file)
+    public function view($view_file): static
     {
         $this->viewFile = $view_file;
         return $this;
     }
 
-    public function getRequest()
+    public function getRequest(): Request|null
     {
         return is_null($this->request) ? app('request') : $this->request;
     }
 
-    public function getOf()
+    public function getOf(): string
     {
         if ($this->of == 'auto')
         {
@@ -139,10 +143,10 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
             return $of;
         }
 
-        return $this->formatter;
+        return $this->of;
     }
 
-    public function getData()
+    public function getData(): mixed
     {
         return $this->data;
     }
@@ -152,7 +156,7 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
         return $this->code;
     }
 
-    public function getMessage()
+    public function getMessage(): Translator|array|null|string
     {
         if (empty($this->message))
         {
@@ -171,12 +175,12 @@ class TextResponse extends Response implements Jsonable, Arrayable, JsonSerializ
         return $this->message;
     }
 
-    public function getAction()
+    public function getAction(): ?Action
     {
         return $this->action;
     }
 
-    public function getOutputData()
+    public function getOutputData(): ?array
     {
         return $this->toArray();
     }

@@ -69,7 +69,7 @@ class ApiHelper {
     /**
      * 获取和api helper相关的request参数
      */
-    protected function getRequestInput(Request $request): array|null {
+    protected function getRequestInput(Request $request): ?array {
         $input = $request->input();
 
         $result = [];
@@ -445,7 +445,7 @@ class ApiHelper {
     }
 
     /**
-     * 获取基于scopeXX的搜索的参数
+     * 获取基于scopeXX的搜索的参数，比如一些组合条件（title like '' or content like ''）可以用这个来实现
      *
      * @example / 中括号示例1：?q[ofStatus]=active，将调用Model中：scopeOfStatus($builder, 'active')
      * @example / 下划线示例2：?q__ofStatus=active，将调用Model中：scopeOfStatus($builder, 'active')
@@ -486,19 +486,19 @@ class ApiHelper {
             return $_b->count();
     }
 
-    public function getSelectColumns(array|string $columns, array $exclude_columns): array {
-        if (!empty($exclude_columns)) {
+    public function getSelectColumns(array|string $columns, array $excludeColumns): array {
+        if (!empty($excludeColumns)) {
             $columns = $this->columnsToFull(Arr::wrap($columns));
-            $exclude_columns = $this->columnsToFull($exclude_columns);
+            $excludeColumns = $this->columnsToFull($excludeColumns);
 
-            return array_diff($columns, $exclude_columns);
+            return array_diff($columns, $excludeColumns);
         } else {
             return $columns;
         }
     }
 
     /**
-     * 类似于Model::find($id)，额外有exclude_columns参数，可以在SELECT侧过滤字符
+     * 类似于Model::find($id)，额外有excludeColumns参数，可以在SELECT侧过滤字符
      * 按条件、以及指定ID的获取Model数据
      * 会启用filters等条件(原Model也可以在find前设置条件)
      *
@@ -507,18 +507,18 @@ class ApiHelper {
      *  ->limit($this->perPage)
      *  ->find($id);
      */
-    public function find(mixed $id, array|string $columns = ['*'], array $exclude_columns = []): Model {
+    public function find(mixed $id, array|string $columns = ['*'], array $excludeColumns = []): Model {
         $_b = clone $this->builder;
 
         $this->_doFilters($_b)
             ->_doQueries($_b);
 
-        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        $columns = $this->getSelectColumns($columns, $excludeColumns);
         return $_b->find($id, $columns);
     }
 
     /**
-     * 类似于Model::findMany($ids)，额外有exclude_columns参数，可以在SELECT侧过滤字符
+     * 类似于Model::findMany($ids)，额外有excludeColumns参数，可以在SELECT侧过滤字符
      * 按条件、以及指定IDs的获取Model集合数据
      * 会启用filters等条件、以及page，perPage(原Model也可以在findMany前设置条件)
      *
@@ -529,14 +529,14 @@ class ApiHelper {
      *  ->limit($this->perPage)
      *  ->findMany($ids);
      */
-    public function findMany(Arrayable|array $ids, array|string $columns = ['*'], array $exclude_columns = []): Collection {
+    public function findMany(Arrayable|array $ids, array|string $columns = ['*'], array $excludeColumns = []): Collection {
         $_b = clone $this->builder;
 
         $this->_doFilters($_b)
             ->_doQueries($_b)
             ->_doOrders($_b);
 
-        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        $columns = $this->getSelectColumns($columns, $excludeColumns);
         return $_b->findMany($ids, $columns);
     }
 
@@ -549,7 +549,7 @@ class ApiHelper {
      *  ->limit(1)
      *  ->get()->first();
      */
-    public function first(array|string $columns = ['*'], array $exclude_columns = []): Model | null {
+    public function first(array|string $columns = ['*'], array $excludeColumns = []): Model | null {
         $_b = clone $this->builder;
 
         $this->_doFilters($_b)
@@ -557,7 +557,7 @@ class ApiHelper {
             ->_doOrders($_b)
             ->_doPage($_b);
 
-        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        $columns = $this->getSelectColumns($columns, $excludeColumns);
         return $_b->first($columns);
     }
 
@@ -570,7 +570,7 @@ class ApiHelper {
      *  ->limit(perPage)
      *  ->get()
      */
-    public function get(array|string $columns = ['*'], array $exclude_columns = []): Collection {
+    public function get(array|string $columns = ['*'], array $excludeColumns = []): Collection {
         $_b = clone $this->builder;
 
         $this->_doFilters($_b)
@@ -578,7 +578,7 @@ class ApiHelper {
             ->_doOrders($_b)
             ->_doPage($_b);
 
-        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        $columns = $this->getSelectColumns($columns, $excludeColumns);
         return $_b->get($columns);
     }
 
@@ -589,14 +589,14 @@ class ApiHelper {
      *  ->orderBy(orders...)
      *  ->get();
      */
-    public function all(array|string $columns = ['*'], array $exclude_columns = []): Collection {
+    public function all(array|string $columns = ['*'], array $excludeColumns = []): Collection {
         $_b = clone $this->builder;
 
         $this->_doFilters($_b)
             ->_doQueries($_b)
             ->_doOrders($_b);
 
-        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        $columns = $this->getSelectColumns($columns, $excludeColumns);
         return $_b->get($columns);
     }
 
@@ -605,14 +605,14 @@ class ApiHelper {
      * 按条件获取分页的对象（LengthAwarePaginator）
      * @return LengthAwarePaginator
      */
-    public function paginate(array|string $columns = ['*'], array $exclude_columns = []): LengthAwarePaginator {
+    public function paginate(array|string $columns = ['*'], array $excludeColumns = []): LengthAwarePaginator {
         $_b = clone $this->builder;
 
         $this->_doFilters($_b)
             ->_doQueries($_b)
             ->_doOrders($_b);
 
-        $columns = $this->getSelectColumns($columns, $exclude_columns);
+        $columns = $this->getSelectColumns($columns, $excludeColumns);
         return $_b->paginate($this->perPage, $columns, 'page', $this->page);
     }
 
@@ -620,53 +620,22 @@ class ApiHelper {
      * 按条件获取分页的数据（array），包含：分页、数据、设置的各项条件、排序
      * @return array
      */
-    public function data(callable $callback = null, array|string $columns = ['*'], array $exclude_columns = []): array {
-        $paginate = $this->paginate($columns, $exclude_columns);
+    public function data(callable $callback = null, array|string $columns = ['*'], array $excludeColumns = []): array {
+        $paginate = $this->paginate($columns, $excludeColumns);
 
         if (is_callable($callback))
-            call_user_func_array($callback, [$paginate]); // reference Objecy
+            $paginate = call_user_func_array($callback, [$paginate]) ?? $paginate; // reference Objecy
 
         return $paginate->toArray() + ['filters' => $this->filters, 'queries' => $this->queries, 'orders' => $this->orders];
     }
 
     /**
-     * 按条件获取一个可以导出的数据（array），包含：导出元数据、表头、数据。
-     * 注意：会启用page、perPage
-     * @return array
-     */
-    public function export(callable $callback = null, array|string $columns = ['*'], array $exclude_columns = []): array {
-
-        set_time_limit(600); // 10 min
-
-        $_b = clone $this->builder;
-
-        $this->_doFilters($_b)
-            ->_doQueries($_b)
-            ->_doOrders($_b);
-
-        $columns = $this->getSelectColumns($columns, $exclude_columns);
-        $paginate = $_b->paginate($this->perPage, $columns);
-
-        if (is_callable($callback))
-            call_user_func_array($callback, [$paginate]);
-
-        $data = $paginate->toArray();
-
-        if (!empty($data['data']) && Arr::isAssoc($data['data'][0]))
-            array_unshift($data['data'], array_keys($data['data'][0]));
-
-        array_unshift($data['data'], [$_b->getModel()->getTable(), $data['from']. '-'. $data['to'].'/'. $data['total'], date('Y-m-d h:i:s')]);
-
-        return $data['data'];
-    }
-
-    /**
      * 按条件获取支持datable使用的分页数据（array）
      */
-    public function datable(callable $callback = null, array $columns = ['*'], array $exclude_columns = []): array|null {
+    public function datable(callable $callback = null, array $columns = ['*'], array $excludeColumns = []): array {
         // 不带 f q 条件的总数
         $total = $this->count();
-        $data = $this->data($callback, $columns, $exclude_columns);
+        $data = $this->data($callback, $columns, $excludeColumns);
 
         $data['recordsTotal'] = $total; // 不带 f q 条件的总数
         $data['recordsFiltered'] = $data['total']; // 带 f q 条件的总数

@@ -2,6 +2,8 @@
 
 namespace Addons\Core\Http\Output;
 
+use Addons\Core\Contracts\Http\Output\Action;
+
 class ActionFactory {
 
     const REDIRECT = 'redirect';
@@ -9,7 +11,7 @@ class ActionFactory {
     const REFRESH = 'refresh';
     const TOAST = 'toast';
 
-    public function make(string $action, ...$config)
+    public function make(string $action, ...$config): Action
     {
         return $this->$action(...$config);
     }
@@ -19,7 +21,7 @@ class ActionFactory {
      *
      * @return \Addons\Core\Http\Output\Actions\ToastAction
      */
-    public function toast(int $timeout = 1500)
+    public function toast(int $timeout = 1500): Actions\ToastAction
     {
         return new Actions\ToastAction($timeout);
     }
@@ -29,7 +31,7 @@ class ActionFactory {
      *
      * @return \Addons\Core\Http\Output\Actions\BackAction
      */
-    public function back()
+    public function back(): Actions\BackAction
     {
         return new Actions\BackAction();
     }
@@ -39,7 +41,7 @@ class ActionFactory {
      *
      * @return \Addons\Core\Http\Output\Actions\RedirectAction
      */
-    public function redirect(string $url, int $timeout = 1500)
+    public function redirect(string $url, int $timeout = 1500): Actions\RedirectAction
     {
         return new Actions\RedirectAction($url, $timeout);
     }
@@ -49,7 +51,7 @@ class ActionFactory {
      *
      * @return \Addons\Core\Http\Output\Actions\RefreshAction
      */
-    public function refresh(int $timeout = 1500)
+    public function refresh(int $timeout = 1500): Actions\RefreshAction
     {
         return new Actions\RefreshAction($timeout);
     }
@@ -59,7 +61,7 @@ class ActionFactory {
      *
      * @return \Addons\Core\Http\Output\Actions\RefreshAction
      */
-    public function null()
+    public function null(): Actions\NullAction
     {
         return new Actions\NullAction();
     }

@@ -2,7 +2,10 @@
 
 namespace Addons\Core\Controllers\Concerns;
 
+use Addons\Core\Http\Output\Response\ApiResponse;
 use BadMethodCallException;
+use Addons\Core\Http\Output\Response\OfficeResponse;
+use Addons\Core\Http\Output\Response\TextResponse;
 use Addons\Core\Http\Output\ResponseFactory;
 
 /**
@@ -24,23 +27,19 @@ use Addons\Core\Http\Output\ResponseFactory;
  */
 trait OutputResponseTrait {
 
-    public function api($data)
-    {
+    public function api($data): ApiResponse {
         return app(ResponseFactory::class)->make('api', ...func_get_args());
     }
 
-    public function office(?array $data)
-    {
+    public function office(?array $data): OfficeResponse {
         return app(ResponseFactory::class)->make('office', ...func_get_args());
     }
 
-    public function success(string $messageName = null, $data = null)
-    {
+    public function success(string $messageName = null, $data = null): TextResponse {
         return app(ResponseFactory::class)->make('success', ...func_get_args());
     }
 
-    public function error(string $messageName = null, $data = null)
-    {
+    public function error(string $messageName = null, $data = null): TextResponse {
         return app(ResponseFactory::class)->make('error', ...func_get_args());
     }
 }
