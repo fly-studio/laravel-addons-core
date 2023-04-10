@@ -37,6 +37,8 @@ class ApiHelper {
     protected array $filters = [];
     protected array $orders = [];
 
+    protected array $defaultOrders = [];
+
     protected static $operatorsTable = [
         '0' => '>=', '1' => '<=',
         'in' => 'in', 'nin' => 'not in', 'is' => 'is',
@@ -63,7 +65,9 @@ class ApiHelper {
         $this->queries($input['q'] ??  []);
         $this->orders($input['o'] ??  []);
         $this->page($request->input('page', 1));
-        $this->perPage($request->input('size', static::defaultPerPage));
+        $this->perPage($request->input('size', $request->input('per_page', static::defaultPerPage)));
+
+        $this->defaultOrders = [$this->builder->getModel()->getKeyName() => 'desc'];
     }
 
     /**
@@ -242,7 +246,7 @@ class ApiHelper {
      */
     private function _doOrders(Builder $builder): static {
         $columnAlias = $this->getColumnAlias();
-        $orders = $this->orders ?: [$this->builder->getModel()->getKeyName() => 'desc'];
+        $orders = $this->orders ?: $this->defaultOrders;
         foreach ($orders as $key => $value) {
             $builder->orderBy($columnAlias[$key] ?? $key, $value);
         }
@@ -441,6 +445,15 @@ class ApiHelper {
         foreach($orders ?? [] as $field => $ascDesc) {
             $this->orderBy($field, $ascDesc);
         }
+        return $this;
+    }
+
+    /**
+     * 设置1个orders都没设置时的默认排序
+     * 当类构造时，会将$this->defaultOrders设置为id倒序
+     */
+    public function defaultOrders(array $defaultOrders): static {
+        $this->defaultOrders = $defaultOrders;
         return $this;
     }
 
