@@ -4,13 +4,21 @@ namespace Addons\Core\Controllers;
 
 use Addons\Core\Controllers\OutputTrait;
 use Illuminate\Routing\Controller as BaseController;
-
+use Addons\Core\Exceptions\PermissionException;
 
 class Controller extends BaseController {
 
     use OutputTrait;
 
     private $_enums = [];
+
+    protected $permissionAuditor = null;
+
+    protected function setPermissionAuditor(callable $callback): static {
+        $this->permissionAuditor = $callback;
+
+        return $this;
+    }
 
     protected function addEnum(string $class, string $key = null) {
         if (is_null($key)) {
@@ -46,6 +54,10 @@ class Controller extends BaseController {
     {
         $this->viewData['_enums'] =  $this->buildEnums();
         $this->viewData['_method'] = $method;
+
+        if (is_callable($this->permissionAuditor)) {
+            throw_if(!(call_user_func_array($this->permissionAuditor, [$this, $method, ...$parameters]) ?? true), PermissionException::class, sprintf("No permission to access [%s@%s].", get_class($this), $method), 403);
+        }
 
         $response = $this->{$method}(...array_values($parameters));
 
