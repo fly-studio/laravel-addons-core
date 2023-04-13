@@ -36,10 +36,14 @@ class Office {
 
         $sheet->fromArray($data);
 
-        if (is_null($filepath))
-            $filepath = tempnam(utils_path('files'), 'excel-');
+        if (is_null($filepath)) {
+            while(
+                ($filepath = utils_path('files/'.date('YmsHis_').rand(100000,999999).'.'.$ext))
+                && file_exists($filepath)
+            ) {}
+        }
 
-        @chmod($filepath, 0777);
+        @mkdir(dirname($filepath), 0777, true);
 
         switch (strtolower($ext)) {
             case 'xlsx':
@@ -57,7 +61,7 @@ class Office {
         }
 
         $objWriter->save($filepath);
-
+        @chmod($filepath, 0777);
         return $filepath;
     }
 

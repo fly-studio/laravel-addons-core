@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Addons\Core\Contracts\Http\Output\ExcelOptions;
 use Addons\Core\Http\Output\Response\TextResponse;
 use Addons\Core\Http\Response\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OfficeResponse extends TextResponse {
 
@@ -60,25 +61,76 @@ class OfficeResponse extends TextResponse {
         return $this;
     }
 
-    public function toDownload(bool $forceDownloadHeader = false): ?BinaryFileResponse {
+    /**
+     * 创建excel文件
+     */
+    public function buildFile(): ?string {
         $data = $this->getOutputData();
         $of = $this->getOf();
+        $filename = null;
 
         switch ($of) {
             case 'csv':
             case 'xls':
             case 'xlsx':
                 $filename = Office::$of($data, excelOptions:$this->getExcelOptions());
-
-                return response()->download(
-                    $filename,
-                    date('YmdHis').'.'.$of,
-                    $forceDownloadHeader ? [] : ['Content-Type' =>  Mimes::getInstance()->getMimeType($of)],
-                )
-                    ->deleteFileAfterSend(true)
-                    ->setStatusCode($this->getStatusCode());
         }
-        return null;
+        return $filename;
+    }
+
+    /**
+     * 获取文件URL
+     */
+    public function toUrl(): ?string {
+        $filename = $this->buildFile();
+
+        return url(normalize_path(relative_path($filename, public_path()), '/'));
+    }
+
+    /**
+     * 直接下载.
+     * @param bool $forceDownloadHeader true输出application/octet-stream的Mime，false会输出excel的Mime
+     */
+    public function toDownload(bool $forceDownloadHeader = false): ?BinaryFileResponse {
+        $filename = $this->buildFile();
+
+        if (empty($filename)) {
+            return null;
+        }
+
+        $of = $this->getOf();
+        return response()->download(
+            $filename,
+            date('YmdHis').'.'.$of,
+            $forceDownloadHeader ? [] : ['Content-Type' =>  Mimes::getInstance()->getMimeType($of)],
+        )
+        ->deleteFileAfterSend(true)
+        ->setStatusCode($this->getStatusCode());
+
+    }
+
+    /**
+     * 输出文件流
+     */
+    public function toStream(): ?StreamedResponse {
+        $filename = $this->buildFile();
+
+        if (empty($filename)) {
+            return null;
+        }
+
+        $of = $this->getOf();
+        return response()->stream(
+            function() use ($filename) {
+                $fp = fopen($filename, "rb");
+                while(!feof($fp)) {
+                    echo fread($fp, 1024);
+                }
+                fclose($fp);
+                unlink($filename);
+            }, $this->getStatusCode(),
+            ['Content-Type' =>  Mimes::getInstance()->getMimeType($of)],
+        );
     }
 
 }

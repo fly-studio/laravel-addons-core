@@ -3,7 +3,7 @@
 if (! function_exists('static_path')) {
     function static_path(string $path = '')
     {
-        return realpath(config('app.static_path', public_path('static')) . (!empty($path) ? DIRECTORY_SEPARATOR.$path : ''));
+        return normalize_path(config('app.static_path', public_path('static')) . (!empty($path) ? DIRECTORY_SEPARATOR.$path : ''));
     }
 }
 
@@ -11,7 +11,7 @@ if (! function_exists('utils_path'))
 {
     function utils_path(string $path = '')
     {
-        return realpath(config('app.utils_path', public_path('utils')) . (!empty($path) ? DIRECTORY_SEPARATOR.$path : ''));
+        return normalize_path(config('app.utils_path', public_path('utils')) . (!empty($path) ? DIRECTORY_SEPARATOR.$path : ''));
     }
 }
 

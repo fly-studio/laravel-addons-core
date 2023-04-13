@@ -76,26 +76,19 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
         parent::prepare($request);
         $lastModified = $this->getLastModified();
 
-        if (!empty($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) == $this->getEtag())
-        {
+        if (!empty($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) == $this->getEtag()) {
             $this->setStatusCode(304);
             //此时必须退出，不然因为etag等头会触发chorme pending的BUG
             abort(304, '', ['Last-Modified' => $lastModified instanceof \DateTime ? $lastModified->format('D, d M Y H:i:s').' GMT' : $lastModified]);
             $this->maxlen = 0;
-        }
-        else if (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE']))
-        {
-            if (strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= ($lastModified instanceof \DateTime ? $lastModified->getTimeStamp() : $lastModified))
-            {
+        } else if (!empty($_SERVER['HTTP_IF_MODIFIED_SINCE'])) {
+            if (strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= ($lastModified instanceof \DateTime ? $lastModified->getTimeStamp() : $lastModified)) {
                 $this->setStatusCode(304);
                 abort(304, '' , ['Last-Modified' => $lastModified instanceof \DateTime ? $lastModified->format('D, d M Y H:i:s').' GMT' : $lastModified]);
                 $this->maxlen = 0;
             }
-        }
-        else
-        {
-            if (isset($_SERVER['SERVER_SOFTWARE']))
-            {
+        } else {
+            if (isset($_SERVER['SERVER_SOFTWARE'])) {
                 switch (substr($_SERVER['SERVER_SOFTWARE'], 0, (int)strpos($_SERVER['SERVER_SOFTWARE'],'/'))) {
                     case 'nginx':
                         $path = str_replace(['/./', '//'], ['/', '/'], rtrim(config('session.path'), '\\/').'/'.relative_path($this->file->getPathname(), public_path()));
@@ -106,8 +99,7 @@ class BinaryFileResponse extends BaseBinaryFileResponse {
                         $this->maxlen = 0;
                         break;
                     case 'Apache':
-                        if (function_exists('apache_get_modules') && in_array('mod_xsendfile', apache_get_modules()))
-                        {
+                        if (function_exists('apache_get_modules') && in_array('mod_xsendfile', apache_get_modules())) {
                             $this->headers->set('X-Sendfile', $this->file->getPathname());
                             $this->maxlen = 0;
                         }
