@@ -61,11 +61,11 @@ class ApiHelper {
         }
         $this->builder = $builder;
         $input = $this->getRequestInput($request);
-        $this->filters($input['f'] ??  []);
-        $this->queries($input['q'] ??  []);
-        $this->orders($input['o'] ??  []);
-        $this->page($request->input('page', 1));
-        $this->perPage($request->input('size', $request->input('per_page', static::defaultPerPage)));
+        $this->filters(isset($input['f']) && is_array($input['f']) ? $input['f'] : []);
+        $this->queries(isset($input['q']) && is_array($input['q']) ? $input['q'] : []);
+        $this->orders(isset($input['o']) && is_array($input['o']) ? $input['o'] :  []);
+        $this->page(intval($request->input('page')) ?: 1);
+        $this->perPage(intval($request->input('size', $request->input('per_page'))) ?: static::defaultPerPage);
 
         $this->defaultOrders = [$this->builder->getModel()->getKeyName() => 'desc'];
     }

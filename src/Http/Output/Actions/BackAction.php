@@ -9,7 +9,6 @@ class BackAction extends Action {
 
     public function __construct()
     {
-
     }
 
     public function jsonSerialize(): array
@@ -20,7 +19,7 @@ class BackAction extends Action {
     public function toArray()
     {
         return [
-            ActionFactory::BACK,
+            ActionFactory::BACK => true,
         ];
     }
 }

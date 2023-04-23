@@ -9,7 +9,6 @@ class NullAction extends Action {
 
     public function __construct()
     {
-
     }
 
     public function jsonSerialize(): array

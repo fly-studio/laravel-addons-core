@@ -7,12 +7,10 @@ use Addons\Core\Contracts\Http\Output\Action;
 
 class RedirectAction extends Action {
 
-    protected $timeout;
     protected $url;
 
-    public function __construct(string $url, int $timeout = 1500)
+    public function __construct(string $url)
     {
-        $this->timeout = $timeout;
         $this->url = app('router')->has($url) ? route($url) : url($url);
     }
 
@@ -24,7 +22,7 @@ class RedirectAction extends Action {
     public function toArray()
     {
         return [
-            ActionFactory::REDIRECT, $this->timeout, $this->url,
+            ActionFactory::REDIRECT => $this->url,
         ];
     }
 }

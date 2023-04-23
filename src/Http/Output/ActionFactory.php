@@ -21,9 +21,9 @@ class ActionFactory {
      *
      * @return \Addons\Core\Http\Output\Actions\ToastAction
      */
-    public function toast(int $timeout = 1500): Actions\ToastAction
+    public function toast(): Actions\ToastAction
     {
-        return new Actions\ToastAction($timeout);
+        return new Actions\ToastAction();
     }
 
     /**
@@ -41,9 +41,9 @@ class ActionFactory {
      *
      * @return \Addons\Core\Http\Output\Actions\RedirectAction
      */
-    public function redirect(string $url, int $timeout = 1500): Actions\RedirectAction
+    public function redirect(string $url): Actions\RedirectAction
     {
-        return new Actions\RedirectAction($url, $timeout);
+        return new Actions\RedirectAction($url);
     }
 
     /**
@@ -51,7 +51,7 @@ class ActionFactory {
      *
      * @return \Addons\Core\Http\Output\Actions\RefreshAction
      */
-    public function refresh(int $timeout = 1500): Actions\RefreshAction
+    public function refresh(): Actions\RefreshAction
     {
         return new Actions\RefreshAction($timeout);
     }

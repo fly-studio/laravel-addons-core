@@ -7,11 +7,9 @@ use Addons\Core\Contracts\Http\Output\Action;
 
 class RefreshAction extends Action {
 
-    protected $timeout;
 
-    public function __construct(int $timeout = 1500)
+    public function __construct()
     {
-        $this->timeout = $timeout;
     }
 
     public function jsonSerialize(): array
@@ -22,7 +20,7 @@ class RefreshAction extends Action {
     public function toArray()
     {
         return [
-            ActionFactory::REFRESH, $this->timeout
+            ActionFactory::REFRESH => true
         ];
     }
 }

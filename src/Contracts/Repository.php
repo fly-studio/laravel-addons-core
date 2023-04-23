@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class Repository {
-    use ApiTrait;
 
     abstract public function prePage(): int;
     abstract public function find($id, array $columns = ['*']);

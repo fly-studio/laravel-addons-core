@@ -7,11 +7,8 @@ use Addons\Core\Contracts\Http\Output\Action;
 
 class ToastAction extends Action {
 
-    protected $timeout;
-
-    public function __construct(int $timeout = 1500)
+    public function __construct()
     {
-        $this->timeout = $timeout;
     }
 
     public function jsonSerialize(): array
@@ -22,7 +19,7 @@ class ToastAction extends Action {
     public function toArray()
     {
         return [
-            ActionFactory::TOAST, $this->timeout
+            ActionFactory::TOAST => true
         ];
     }
 
